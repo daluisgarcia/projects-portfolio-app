@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -24,16 +25,23 @@ from api import views
 
 
 router = routers.DefaultRouter()
-router.register(r'projects', views.ProjectViewSet)
-router.register(r'projects-pinned', views.PinnedProjectViewSet, basename='pinned-projects')
-router.register(r'technologies', views.TechnologyViewSet)
-router.register(r'methodologies', views.DevelopmentMethodologyViewSet)
-router.register(r'fields', views.ProjectFieldViewSet)
+router.register(r"projects", views.ProjectViewSet)
+router.register(
+    r"projects-pinned", views.PinnedProjectViewSet, basename="pinned-projects"
+)
+router.register(r"technologies", views.TechnologyViewSet)
+router.register(r"methodologies", views.DevelopmentMethodologyViewSet)
+router.register(r"fields", views.ProjectFieldViewSet)
+router.register(r"skills", views.SkillViewSet)
 
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', ListProjectsView.as_view(), name='index'),
-    path('api/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns = (
+    [
+        path("admin/", admin.site.urls),
+        path("", ListProjectsView.as_view(), name="index"),
+        path("api/", include(router.urls)),
+        path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    ]
+    + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+)

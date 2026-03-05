@@ -6,4 +6,6 @@ static/
 
 # Docker environment
 mysqldata/
+postgresdata/
 docker-compose.override.yaml
+*.egg-info/

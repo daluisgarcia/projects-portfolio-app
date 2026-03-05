@@ -1,37 +1,24 @@
-FROM python:3.12-slim
+FROM python:3.13-slim as builder
 
 ARG YOUR_ENV
 
 ENV YOUR_ENV=${YOUR_ENV} \
   PYTHONFAULTHANDLER=1 \
   PYTHONUNBUFFERED=1 \
-  PYTHONHASHSEED=random \
-  PIP_NO_CACHE_DIR=off \
-  PIP_DISABLE_PIP_VERSION_CHECK=on \
-  PIP_DEFAULT_TIMEOUT=100 \
-  # Poetry's configuration:
-  POETRY_NO_INTERACTION=1 \
-  POETRY_VIRTUALENVS_CREATE=false \
-  POETRY_CACHE_DIR='/var/cache/pypoetry' \
-  POETRY_HOME='/usr/local' \
-  POETRY_VERSION=1.8.3
+  PYTHONHASHSEED=random
 
 RUN apt-get update && \ 
-    apt-get install -y curl && \
-    apt-get install -y gcc default-libmysqlclient-dev pkg-config && \
-    export MYSQLCLIENT_CFLAGS=`pkg-config mysqlclient --cflags` && \
-    export MYSQLCLIENT_LDFLAGS=`pkg-config mysqlclient --libs`
-RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN poetry --version
-RUN poetry config virtualenvs.create false
+    apt-get install -y gcc libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY poetry.lock pyproject.toml /app/
-
-# Project initialization:
-RUN poetry install $(test "$YOUR_ENV" == production && echo "--only=main") --no-interaction --no-ansi
-RUN poetry add gunicorn
 
 COPY . /app/
+
+RUN pip install --no-cache-dir . gunicorn
+
+RUN chmod +x /app/prepare-django-db.sh
+
+ENTRYPOINT ["sh", "/app/prepare-django-db.sh"]
 
 CMD ["gunicorn", "app.wsgi:application", "--bind", "0.0.0.0:8000"]

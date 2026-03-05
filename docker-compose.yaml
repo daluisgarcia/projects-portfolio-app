@@ -1,42 +1,43 @@
 services:
-  db:
-    image: mysql:8.4
-    container_name: db
+  portfolio-db:
+    image: postgres:17
+    container_name: portfolio-db
     ports:
-      - "3307:3306"
+      - "5433:5432"
     environment:
-      MYSQL_ROOT_PASSWORD: "mysqlpassword"
-      MYSQL_DATABASE: "portfolio"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgrespassword"
+      POSTGRES_DB: "portfolio"
     restart: always
     volumes:
-      # Use this option to persist the MySQL DBs in a shared volume.
-      - ./mysqldata:/var/lib/mysql:rw,delegated
-      # Use this option to persist the MySQL DBs in a data volume.
-      # - db_data:/var/lib/mysql
+      # Use this option to persist the PostgreSQL DBs in a shared volume.
+      - ./postgresdata:/var/lib/postgresql/data:rw,delegated
+      # Use this option to persist the PostgreSQL DBs in a data volume.
+      # - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 3s
-      timeout: 1s
-      retries: 10
+      test: ["CMD-SHELL", "pg_isready -U postgres -d portfolio"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     container_name: portfolio-api
     build: .
     links:
-      - db
+      - portfolio-db
     depends_on:
-      db:
+      portfolio-db:
         condition: service_healthy
     ports:
       - "8000:8000"
     environment:
       - DEBUG=False
       - SECRET_KEY="justasecretkey"
-      - DATABASE_ENGINE=mysql
+      - DATABASE_ENGINE=postgresql
       - DATABASE_NAME=portfolio
-      - DATABASE_USER=root
-      - DATABASE_PASSWORD=mysqlpassword
-      - DATABASE_HOST=db
-      - DATABASE_PORT=3306
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgrespassword
+      - DATABASE_HOST=portfolio-db
+      - DATABASE_PORT=5432
       - DEBUG=True
       - ALLOWED_HOSTS=*

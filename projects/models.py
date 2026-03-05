@@ -36,7 +36,7 @@ class Technology(models.Model):
         years_difference = datetime.now().year - self.date_experience_began.year
         
         if years_difference == 0:
-            return f'<1 year'
+            return '<1 year'
 
         return f'+{years_difference} years'
 
@@ -72,7 +72,6 @@ class ProjectField(models.Model):
 
 
 class Project(models.Model):
-
     class ProjectPurpose(models.TextChoices):
         PERSONAL = 'Personal', 'Personal'
         PROFESSIONAL = 'Professional', 'Professional'
@@ -99,10 +98,11 @@ class Project(models.Model):
     technologies = models.ManyToManyField(Technology, related_name='projects')
     methodology_used = models.ForeignKey(DevelopmentMethodology, on_delete=models.SET_NULL, related_name='projects', null=True)
 
-
     def __str__(self):
         return self.name
 
-    
     def methodology(self) -> str:
+        if not self.methodology_used:
+            return 'N/A'
+        
         return self.methodology_used.name
