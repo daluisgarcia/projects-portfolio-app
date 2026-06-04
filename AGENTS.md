@@ -8,12 +8,20 @@
 | Skill | Description | URL |
 |-------|-------------|-----|
 | `django` | Django framework for web development, including models, views, serializers, and admin interface. | [SKILL.md](skills/django/SKILL.md) |
+| `caveman` | Ultra-compressed communication mode. Cuts token usage ~75% by speaking like caveman while keeping full technical accuracy. Supports intensity levels: lite, full (default), ultra, wenyan-lite, wenyan-full, wenyan-ultra. | [SKILL.md](.agents/skills/caveman/SKILL.md) |
+| `python-performance-optimization` | Profile and optimize Python code using cProfile, memory profilers, and performance best practices. | [SKILL.md](.agents/skills/python-performance-optimization/SKILL.md) |
+| `python-testing-patterns` | Implement comprehensive testing strategies with pytest, fixtures, mocking, and test-driven development. | [SKILL.md](.agents/skills/python-testing-patterns/SKILL.md) |
+| `systematic-debugging` | Systematic root cause investigation before proposing fixes. Four-phase process: root cause → pattern analysis → hypothesis → implementation. | [SKILL.md](.agents/skills/systematic-debugging/SKILL.md) |
 
 ## Auto-invoke Skills
 When performing these actions, ALWAYS invoke the corresponding skill FIRST:
 | Action | Skill |
 |--------|-------|
+| ALWAYS use this skill unless the user specifies otherwise | `caveman` |
 | Adding DRF pagination or permissions | `django` |
+| Encountering any bug, test failure, or unexpected behavior | `systematic-debugging` |
+| Debugging slow code, profiling, or optimizing bottlenecks | `python-performance-optimization` |
+| Writing Python tests, setting up test suites, or implementing TDD | `python-testing-patterns` |
 
 ## Technical Stack
 - **Language:** Python 3.13
