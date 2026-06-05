@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Projects | Data Science/Software Engineering Portfolio{% endblock %}
+
+{% block main_class %}pt-32 pb-section-gap max-w-container-max mx-auto px-margin-mobile md:px-gutter{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/projects.css' %}">
+<link rel="stylesheet" href="{% static 'css/code-style.css' %}">
+{% endblock %}
+
+{% block content %}
+<header class="mb-16 pl-4">
+    <h1 class="font-display-lg text-display-lg-mobile md:text-display-lg mb-4">
+        Engineering <span class="text-secondary">Excellence</span>
+    </h1>
+    <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+        A curated selection of technical architectures and machine learning systems designed for scalability,
+        performance, and data-driven impact.
+    </p>
+</header>
+
+<div class="flex group mb-12">
+    <div class="execution-count hidden md:block" id="in-count">2</div>
+    <div class="flex-1 code-cell p-6 rounded-r-lg shadow-inner relative">
+        <button
+            class="absolute top-4 right-4 flex items-center gap-2 bg-secondary px-3 py-1 rounded hover:bg-secondary-dark text-on-secondary transition-all"
+            id="execute-btn"
+        >
+            <span class="material-symbols-outlined text-base group-active:rotate-180 transition-transform">play_arrow</span>
+            <span class="font-label-caps text-[17px]">Execute Query</span>
+        </button>
+        <div class="font-code-sm text-code-sm leading-relaxed space-y-1 overflow-x-auto">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-4">
+                <span class="syntax-keyword">import</span>
+                portfolio_manager
+                <span class="syntax-keyword">as</span>
+                pm
+            </div>
+            <br>
+            <div class="mt-4 flex flex-wrap items-center gap-y-4">
+                pm.<span class="syntax-function">query</span><span
+                    class="text-on-surface">(</span>
+                category=
+                <div class="relative inline-block min-w-[180px]">
+                    <select
+                        class="w-full bg-surface-container-high text-on-surface border border-outline-variant/50 rounded px-3 py-1 font-code-sm focus:outline-none focus:border-secondary transition-colors cursor-pointer"
+                        id="category-query">
+                        <option value="all">"All"</option>
+                        {% for category in categories %}
+                        <option value="{{ category.name|slugify }}">"{{ category.name }}"</option>
+                        {% endfor %}
+                    </select>
+                </div>)
+                <span class="cursor"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="space-y-12" id="results-container">
+    <div class="flex gap-6 items-start opacity-0 translate-y-4 transition-all duration-500" id="results-output-wrapper">
+        <div class="output-count text-outline font-code-sm text-code-sm w-16 pt-3 hidden md:block" id="out-count">1</div>
+        <div class="flex-1">
+            <div class="mb-4 text-label-caps text-label-caps font-label-caps text-outline">Query Result: <span
+                    class="text-tertiary" id="result-status">Displaying projects</span></div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter" id="projects-grid">
+                {% if projects %}
+                {% for project in projects %}
+                {% cycle 'md:col-span-8' 'md:col-span-4' 'md:col-span-5' 'md:col-span-7' as col_span silent %}
+                {% if forloop.counter|divisibleby:2 and not forloop.counter|divisibleby:4 %}
+                {% comment %}Even cards (2, 6, 10...) follow a different layout{% endcomment %}
+                {% endif %}
+                <div class="project-card {{ col_span }} group relative overflow-hidden bg-surface-container-low border border-outline-variant/20 rounded-xl transition-all duration-300 {% if col_span == 'md:col-span-8' or col_span == 'md:col-span-7' %}flex flex-col md:flex-row{% else %}flex flex-col{% endif %}"
+                    data-category="{% with field=project.tech_fields.first %}{% if field %}{{ field.name|slugify }}{% else %}all{% endif %}{% endwith %}">
+                    {% if col_span == 'md:col-span-8' or col_span == 'md:col-span-7' %}
+                    <div
+                        class="{% if col_span == 'md:col-span-8' %}md:w-1/2{% else %}md:w-1/2 order-2 md:order-1{% endif %} overflow-hidden h-64 {% if col_span == 'md:col-span-8' %}md:h-full border-b md:border-b-0 md:border-r{% else %}md:h-auto order-1 md:order-2 border-l{% endif %} border-outline-variant/20">
+                        {% if project.media_files.all %}
+                        <img data-alt="{{ project.name }}"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            src="{{ project.media_files.all.0.file.url }}">
+                        {% else %}
+                        <img data-alt="{{ project.name }}"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            src="https://via.placeholder.com/600x400/051424/ffb599?text={{ project.name|urlencode }}">
+                        {% endif %}
+                    </div>
+                    <div
+                        class="p-8 {% if col_span == 'md:col-span-8' %}md:w-1/2{% else %}md:w-1/2{% endif %} flex flex-col justify-between">
+                        {% else %}
+                        <div class="h-48 overflow-hidden border-b border-outline-variant/20">
+                            {% if project.media_files.all %}
+                            <img data-alt="{{ project.name }}"
+                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                src="{{ project.media_files.all.0.file.url }}">
+                            {% else %}
+                            <img data-alt="{{ project.name }}"
+                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                src="https://via.placeholder.com/600x300/051424/ffb599?text={{ project.name|urlencode }}">
+                            {% endif %}
+                        </div>
+                        <div class="p-8 flex-1 flex flex-col justify-between">
+                            {% endif %}
+                            <div>
+                                <div class="flex gap-2 mb-4">
+                                    {% for field in project.tech_fields.all|slice:":3" %}
+                                    <span class="text-code-sm font-code-sm bg-surface-container-highest px-3 py-1 rounded text-primary">
+                                        <span class="{{ field.icon_name }}"></span>
+                                        {{ field.name }}
+                                    </span>
+                                    {% endfor %}
+                                    |
+                                    {% for tech in project.technologies.all %}
+                                    <span class="text-code-sm font-code-sm bg-surface-container-highest px-3 py-1 rounded text-primary">
+                                        <span class="{{ tech.icon_name }}"></span>
+                                        {{ tech.name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm mb-4">{{ project.name }}</h3>
+                                <p class="text-on-surface-variant mb-6">{{ project.description }}</p>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 text-tertiary mb-4">
+                                    <span class="material-symbols-outlined text-sm">trending_up</span>
+                                    {% cycle '40% Reduction in latency' '92% Prediction Accuracy' '1M+ events/hr' '85% reduction in manual audit' as impact silent %}
+                                    <span class="font-label-caps text-label-caps">{{ impact }}</span>
+                                </div>
+                                <a class="inline-flex items-center gap-2 text-secondary font-label-caps text-label-caps group/link"
+                                    href="{{ project.project_link|default:project.github_link|default:'#' }}">
+                                    View Project
+                                    <span
+                                        class="material-symbols-outlined group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="md:col-span-12 text-center py-12">
+                        <p class="text-on-surface-variant font-body-lg">No projects found. Check back soon.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/projects.js' %}"></script>
+{% endblock %}

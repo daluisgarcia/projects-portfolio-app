@@ -15,32 +15,18 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from rest_framework import routers
 
-from projects.views import ListProjectsView
-from api import views
-
-
-router = routers.DefaultRouter()
-router.register(r"projects", views.ProjectViewSet)
-router.register(
-    r"projects-pinned", views.PinnedProjectViewSet, basename="pinned-projects"
-)
-router.register(r"technologies", views.TechnologyViewSet)
-router.register(r"methodologies", views.DevelopmentMethodologyViewSet)
-router.register(r"fields", views.ProjectFieldViewSet)
-router.register(r"skills", views.SkillViewSet)
+from projects.views import LandingView, ProjectsView
 
 
 urlpatterns = (
     [
         path("admin/", admin.site.urls),
-        path("", ListProjectsView.as_view(), name="index"),
-        path("api/", include(router.urls)),
-        path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+        path("", LandingView.as_view(), name="landing"),
+        path("projects/", ProjectsView.as_view(), name="projects"),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
