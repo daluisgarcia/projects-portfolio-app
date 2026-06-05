@@ -1,0 +1,73 @@
+[
+{
+  "model": "experiences.experience",
+  "pk": 1,
+  "fields": {
+    "company": "Neural Nexus Systems",
+    "role_title": "Data Science & ML Engineer",
+    "start_date": "2022-01-01",
+    "end_date": null,
+    "description": "Architecting end-to-end ML training pipelines and transitioning legacy rule-based engines to sophisticated predictive models. Specializing in high-performance model deployment and data engineering at scale.",
+    "is_active": true,
+    "priority": 90,
+    "display_order": 10,
+    "accent_style": "PRIMARY",
+    "created_at": "2026-06-05T14:00:00Z",
+    "updated_at": "2026-06-05T14:00:00Z",
+    "skills": [
+      ["PyTorch"],
+      ["Python"],
+      ["Kubernetes"],
+      ["TensorFlow"],
+      ["SQL"]
+    ]
+  }
+},
+{
+  "model": "experiences.experience",
+  "pk": 2,
+  "fields": {
+    "company": "CloudArch Solutions",
+    "role_title": "Senior Backend Developer",
+    "start_date": "2019-03-01",
+    "end_date": "2022-12-31",
+    "description": "Led the migration of monolith Ruby on Rails services into highly scalable Go and Python microservices. Engineered real-time event streaming systems for high-traffic e-commerce core infrastructure.",
+    "is_active": true,
+    "priority": 80,
+    "display_order": 20,
+    "accent_style": "TERTIARY",
+    "created_at": "2026-06-05T14:00:00Z",
+    "updated_at": "2026-06-05T14:00:00Z",
+    "skills": [
+      ["Go"],
+      ["Ruby"],
+      ["Kafka"],
+      ["Redis"],
+      ["AWS"]
+    ]
+  }
+},
+{
+  "model": "experiences.experience",
+  "pk": 3,
+  "fields": {
+    "company": "InnoBase Tech",
+    "role_title": "Software Developer",
+    "start_date": "2017-01-01",
+    "end_date": "2019-12-31",
+    "description": "Developed robust REST APIs and deep ERP system integrations. Focused on maintaining system stability and performance for enterprise resource planning software.",
+    "is_active": true,
+    "priority": 70,
+    "display_order": 30,
+    "accent_style": "OUTLINE",
+    "created_at": "2026-06-05T14:00:00Z",
+    "updated_at": "2026-06-05T14:00:00Z",
+    "skills": [
+      ["REST APIs"],
+      ["SQL Server"],
+      ["Java"],
+      ["Docker"]
+    ]
+  }
+}
+]

@@ -20,6 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from projects.views import LandingView, ProjectsView
+from experiences.views import ExperienceListView
 
 
 urlpatterns = (
@@ -27,6 +28,7 @@ urlpatterns = (
         path("admin/", admin.site.urls),
         path("", LandingView.as_view(), name="landing"),
         path("projects/", ProjectsView.as_view(), name="projects"),
+        path("experiences/", ExperienceListView.as_view(), name="experiences"),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

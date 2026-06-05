@@ -22,7 +22,7 @@
 </header>
 
 <div class="flex group mb-12">
-    <div class="execution-count hidden md:block" id="in-count">2</div>
+    <div class="execution-count hidden md:block" id="in-count">1</div>
     <div class="flex-1 code-cell p-6 rounded-r-lg shadow-inner relative">
         <button
             class="absolute top-4 right-4 flex items-center gap-2 bg-secondary px-3 py-1 rounded hover:bg-secondary-dark text-on-secondary transition-all"
@@ -111,7 +111,7 @@
                                         {{ field.name }}
                                     </span>
                                     {% endfor %}
-                                    |
+                                    //
                                     {% for tech in project.technologies.all %}
                                     <span class="text-code-sm font-code-sm bg-surface-container-highest px-3 py-1 rounded text-primary">
                                         <span class="{{ tech.icon_name }}"></span>

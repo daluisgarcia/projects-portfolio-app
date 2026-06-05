@@ -1,0 +1,51 @@
+/* experiences.css — page-specific styles for the /experiences/ page
+ *
+ * The Tailwind tokens (electric-indigo, surface-container-*, secondary,
+ * spacing scale, font families) are loaded globally by base.html via
+ * static/js/tailwind-config.js. This file only contains rules that
+ * Tailwind utilities cannot express (gradient timeline line, glass
+ * panel backdrop blur, marker color variants keyed by accent_style).
+ */
+
+/* Reused: dark backdrop with subtle border + backdrop blur, applied to
+   every timeline card and sidebar panel. */
+.glass-panel {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Vertical gradient line that runs behind the timeline markers. */
+.timeline-line {
+    background: linear-gradient(180deg, #6366f1 0%, #c0c1ff 50%, #334155 100%);
+}
+
+/* Marker color variants — driven by Experience.accent_style via the
+   `marker-{accent_style|lower}` class on the marker div. The default
+   (electric-indigo) is set inline via Tailwind; these override the
+   fill when accent_style is tertiary or outline. */
+.marker-tertiary {
+    background-color: var(--color-tertiary, #c2c6db) !important;
+    box-shadow: none !important;
+}
+.marker-outline {
+    background-color: var(--color-outline, #908fa0) !important;
+    box-shadow: none !important;
+}
+
+/* Skill chip text color variants — driven by the same accent_style.
+   The .chip-* class is applied to each <span class="chip">. */
+.chip-primary {
+    color: var(--color-secondary, #bcff5f);
+}
+.chip-tertiary {
+    color: var(--color-on-surface-variant, #c7c4d7);
+}
+.chip-outline {
+    color: var(--color-outline, #908fa0);
+}
+
+/* Hover state for the timeline cards (border tint matches marker). */
+.glass-panel:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+}

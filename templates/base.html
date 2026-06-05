@@ -47,8 +47,9 @@
                     href="/">Home</a>
                 <a class="{% if active_page == 'projects' %}text-secondary font-bold border-b-2 border-secondary pb-1{% else %}text-on-surface-variant hover:text-secondary transition-colors{% endif %} font-label-caps text-label-caps"
                     href="/projects/">Projects</a>
-                <a class="text-on-surface-variant hover:text-secondary transition-colors font-label-caps text-label-caps"
-                    href="#">Experience</a>
+                {# Active-page highlight matches the Projects link pattern #}
+                <a class="{% if active_page == 'experience' %}text-secondary font-bold border-b-2 border-secondary pb-1{% else %}text-on-surface-variant hover:text-secondary transition-colors{% endif %} font-label-caps text-label-caps"
+                    href="{% url 'experiences' %}">Experience</a>
                 <a class="text-on-surface-variant hover:text-secondary transition-colors font-label-caps text-label-caps"
                     href="#">Blog</a>
             </div>
@@ -91,8 +92,9 @@
                 href="/">Home</a>
             <a class="px-4 py-3 rounded-lg font-label-caps text-label-caps border-l-2 {% if active_page == 'projects' %}border-secondary bg-surface-container text-secondary font-bold{% else %}border-transparent text-on-surface hover:bg-surface-container hover:text-secondary{% endif %} transition-colors"
                 href="/projects/">Projects</a>
-            <a class="px-4 py-3 rounded-lg font-label-caps text-label-caps border-l-2 border-transparent text-on-surface hover:bg-surface-container hover:text-secondary transition-colors"
-                href="#">Experience</a>
+            {# Active-page highlight matches the Projects mobile link pattern #}
+            <a class="px-4 py-3 rounded-lg font-label-caps text-label-caps border-l-2 {% if active_page == 'experience' %}border-secondary bg-surface-container text-secondary font-bold{% else %}border-transparent text-on-surface hover:bg-surface-container hover:text-secondary{% endif %} transition-colors"
+                href="{% url 'experiences' %}">Experience</a>
             <a class="px-4 py-3 rounded-lg font-label-caps text-label-caps border-l-2 border-transparent text-on-surface hover:bg-surface-container hover:text-secondary transition-colors"
                 href="#">Blog</a>
         </nav>

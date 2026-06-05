@@ -1,3 +1,11 @@
+/* tailwind-config.js — Global Tailwind Play CDN theme overrides.
+   Loaded by templates/base.html. Defines all custom design-system tokens
+   (Material 3 colors, font families, spacing scale) used across the site.
+
+   Batch 4 (experiences-page): added the named spacing scale {xs,sm,md,lg,xl},
+   the headline-lg font family + size, and the code-md font family + size
+   so that templates/experiences/list.html renders with the intended typography
+   and spacing. These tokens were missing from the previous config. */
 tailwind.config = {
     darkMode: "class",
     theme: {
@@ -49,7 +57,8 @@ tailwind.config = {
                 "on-primary-fixed-variant": "#6666d8",
                 "secondary-fixed": "#a8f928",
                 "primary-fixed": "#e1e0ff",
-                "on-primary-fixed": "#383470"
+                "on-primary-fixed": "#383470",
+                "electric-indigo": "#6366f1"
             },
             "borderRadius": {
                 "DEFAULT": "0.125rem",
@@ -62,7 +71,12 @@ tailwind.config = {
                 "margin-mobile": "20px",
                 "base": "8px",
                 "container-max": "1200px",
-                "section-gap": "120px"
+                "section-gap": "120px",
+                "xs": "4px",
+                "sm": "8px",
+                "md": "16px",
+                "lg": "24px",
+                "xl": "32px"
             },
             "fontFamily": {
                 "headline-sm": ["Space Grotesk"],
@@ -73,6 +87,9 @@ tailwind.config = {
                 "code-sm": ["JetBrains Mono"],
                 "headline-md": ["Space Grotesk"],
                 "display-lg-mobile": ["Space Grotesk"],
+                "headline-xl": ["Space Grotesk"],
+                "headline-lg": ["Space Grotesk"],
+                "code-md": ["JetBrains Mono"],
             },
             "fontSize": {
                 "headline-sm": ["22px", { "lineHeight": "1.3", "fontWeight": "600" }],
@@ -82,7 +99,10 @@ tailwind.config = {
                 "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
                 "code-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
                 "headline-md": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
-                "display-lg-mobile": ["36px", { "lineHeight": "1.2", "fontWeight": "700" }]
+                "display-lg-mobile": ["36px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "headline-lg": ["28px", { "lineHeight": "1.25", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                "code-md": ["13px", { "lineHeight": "1.5", "fontWeight": "400" }],
             }
         },
     },
