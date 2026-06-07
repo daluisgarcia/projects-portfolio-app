@@ -19,8 +19,9 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from projects.views import LandingView, ProjectsView
+from blog.views import BlogListView, BlogPostDetailView
 from experiences.views import ExperienceListView
+from projects.views import LandingView, ProjectsView
 
 
 urlpatterns = (
@@ -29,6 +30,8 @@ urlpatterns = (
         path("", LandingView.as_view(), name="landing"),
         path("projects/", ProjectsView.as_view(), name="projects"),
         path("experiences/", ExperienceListView.as_view(), name="experiences"),
+        path("blog/", BlogListView.as_view(), name="blog_list"),
+        path("blog/<slug:slug>/", BlogPostDetailView.as_view(), name="blog_detail"),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

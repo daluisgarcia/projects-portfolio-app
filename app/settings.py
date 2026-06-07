@@ -43,6 +43,7 @@ ALLOWED_HOSTS = str(env("ALLOWED_HOSTS", default="")).split(",")
 INSTALLED_APPS = [
     "projects.apps.ProjectsConfig",
     "experiences.apps.ExperiencesConfig",
+    "blog.apps.BlogConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
