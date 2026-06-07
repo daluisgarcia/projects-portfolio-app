@@ -27,16 +27,17 @@
 # inline at no extra cost.
 
 import re
+import unittest
 
 from django.contrib import admin as django_admin
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
 from django.db.models import ProtectedError
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils import timezone
 
-from blog.admin import BlogPostAdmin, CategoryAdmin, TagAdmin
-from blog.models import BlogPost, Category, Tag
+from blog.admin import BlogPostAdmin, BlogPostEmbeddingAdmin, CategoryAdmin, TagAdmin
+from blog.models import BlogPost, BlogPostEmbedding, Category, Tag
 from blog.views import BlogListView, BlogPostDetailView
 
 
@@ -1004,3 +1005,148 @@ class BlogPaginationTests(TestCase):
         """
         with self.assertNumQueries(5):
             self.client.get(reverse("blog_list"))
+
+
+# 384-dim zero vector — the default for BlogPostEmbedding.embedding
+_ZERO_VECTOR = [0.0] * 384
+
+
+@unittest.skipUnless(
+    connection.vendor == "postgresql",
+    "BlogPostEmbedding uses pgvector; requires PostgreSQL with the vector extension",
+)
+class BlogPostEmbeddingModelTests(TestCase):
+    """Tests for the BlogPostEmbedding model.
+
+    The ``embedding`` column is a ``pgvector.django.VectorField(dimensions=384)``
+    and the migration enables the ``vector`` postgres extension. The whole
+    class skips on non-postgres backends (e.g. local SQLite runs) because
+    neither the column type nor the extension is available there.
+
+    Run with: ``docker-compose exec app python manage.py test blog``
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.category = Category.objects.create(name="MLOps", slug="mlops")
+        cls.post = BlogPost.objects.create(
+            title="Embedded Post",
+            slug="embedded-post",
+            body="x",
+            category=cls.category,
+            is_published=True,
+        )
+
+    def test_str(self):
+        # __str__ returns the embedding identifier (post title + model name).
+        embedding = BlogPostEmbedding(post=self.post)
+        self.assertIn("Embedded Post", str(embedding))
+        self.assertIn("all-MiniLM-L6-v2", str(embedding))
+
+    def test_default_model_name(self):
+        # The default model_name is 'all-MiniLM-L6-v2' (sentence-transformers
+        # model that produces 384-dim vectors — the model that fits the
+        # VectorField(dimensions=384) declared on the model).
+        embedding = BlogPostEmbedding.objects.create(
+            post=self.post, embedding=_ZERO_VECTOR
+        )
+        self.assertEqual(embedding.model_name, "all-MiniLM-L6-v2")
+
+    def test_unique_together_same_post_and_model(self):
+        # Two embeddings with the same (post, model_name) violate the
+        # unique_together constraint and raise IntegrityError on save.
+        BlogPostEmbedding.objects.create(
+            post=self.post, embedding=_ZERO_VECTOR
+        )
+        with self.assertRaises(IntegrityError):
+            BlogPostEmbedding.objects.create(
+                post=self.post, embedding=_ZERO_VECTOR
+            )
+
+    def test_unique_together_allows_different_model_names(self):
+        # Two embeddings with the same post but different model_name is OK —
+        # the unique constraint is the pair, not just the post.
+        BlogPostEmbedding.objects.create(
+            post=self.post, embedding=_ZERO_VECTOR
+        )
+        BlogPostEmbedding.objects.create(
+            post=self.post,
+            model_name="other-model",
+            embedding=_ZERO_VECTOR,
+        )
+        self.assertEqual(self.post.embeddings.count(), 2)
+
+    def test_fk_cascade_deletes_embeddings(self):
+        # Deleting a post cascades to its embeddings (on_delete=CASCADE).
+        BlogPostEmbedding.objects.create(
+            post=self.post, embedding=_ZERO_VECTOR
+        )
+        self.assertEqual(BlogPostEmbedding.objects.count(), 1)
+        self.post.delete()
+        self.assertEqual(BlogPostEmbedding.objects.count(), 0)
+
+    def test_reverse_relation_related_name(self):
+        # post.embeddings returns all embeddings for the post via the
+        # related_name='embeddings' on the FK.
+        e1 = BlogPostEmbedding.objects.create(
+            post=self.post, embedding=_ZERO_VECTOR
+        )
+        e2 = BlogPostEmbedding.objects.create(
+            post=self.post,
+            model_name="second-model",
+            embedding=_ZERO_VECTOR,
+        )
+        # Meta.ordering is ('post', 'model_name') — same post, ordered by
+        # model_name ('all-MiniLM-L6-v2' < 'second-model' alphabetically).
+        self.assertEqual(list(self.post.embeddings.all()), [e1, e2])
+
+    def test_vector_persists_384_dims(self):
+        # A 384-dim vector with distinct values roundtrips through the DB
+        # with all dimensions intact. Verifies the column accepts the full
+        # dimension count and that the pgvector roundtrip is lossless (to
+        # float32 precision).
+        original = [0.001 * (i + 1) for i in range(384)]
+        embedding = BlogPostEmbedding.objects.create(
+            post=self.post, embedding=original
+        )
+        embedding.refresh_from_db()
+        self.assertEqual(len(embedding.embedding), 384)
+        for i, expected in enumerate(original):
+            self.assertAlmostEqual(
+                float(embedding.embedding[i]),
+                expected,
+                places=4,
+                msg=f"mismatch at index {i}: got {embedding.embedding[i]!r}, expected {expected!r}",
+            )
+
+
+class BlogPostEmbeddingAdminTests(TestCase):
+    """Tests for the admin registration of BlogPostEmbedding.
+
+    This class does not exercise the vector field itself (it does not
+    need to), so it runs on any backend. It only verifies that the admin
+    site has the model registered with the right admin class.
+    """
+
+    def test_registered(self):
+        # BlogPostEmbedding is registered with django.contrib.admin and the
+        # registered admin class is BlogPostEmbeddingAdmin.
+        self.assertIn(BlogPostEmbedding, django_admin.site._registry)
+        self.assertIsInstance(
+            django_admin.site._registry[BlogPostEmbedding],
+            BlogPostEmbeddingAdmin,
+        )
+
+    def test_admin_list_display(self):
+        # BlogPostEmbeddingAdmin.list_display exposes the post, model_name,
+        # and timestamp columns.
+        self.assertEqual(
+            BlogPostEmbeddingAdmin.list_display,
+            ("post", "model_name", "created_at", "updated_at"),
+        )
+
+    def test_admin_raw_id_for_post_fk(self):
+        # The post FK uses raw_id_fields so the admin does not render the
+        # full <select> widget for the blogpost lookup (better for large
+        # post tables).
+        self.assertIn("post", BlogPostEmbeddingAdmin.raw_id_fields)

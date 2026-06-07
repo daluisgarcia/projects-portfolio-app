@@ -26,7 +26,8 @@ When performing these actions, ALWAYS invoke the corresponding skill FIRST:
 ## Technical Stack
 - **Language:** Python 3.13
 - **Framework:** Django 6.0+ (class-based views, server-rendered templates — **no DRF**)
-- **Database:** PostgreSQL 17 (containerized via Docker); SQLite is the default in dev
+- **Database:** PostgreSQL 17 with pgvector extension (containerized via Docker; `pgvector/pgvector:pg17` image); SQLite is the default in dev (no vector support)
+- **Vector store:** `pgvector` Python package + postgres `vector` extension (384-dim blog embeddings)
 - **Frontend:** Django templates + Tailwind CSS (CDN) + custom CSS/JS in `static/`
 - **Blog rendering:** `markdown` library (extensions: `fenced_code`, `tables`, `nl2br`)
 - **Containerization:** Docker & Docker Compose
@@ -38,8 +39,8 @@ When performing these actions, ALWAYS invoke the corresponding skill FIRST:
 |----------------|---------|
 | `app/` | Django project configuration (`settings.py`, `urls.py`, `wsgi.py`, `asgi.py`) |
 | `projects/` | Landing page + projects gallery: models, CBVs, admin, templates |
-| `experiences/` | Professional experiences timeline: models, CBVs, admin, fixtures, templates |
-| `blog/` | Markdown blog: models with auto-rendered HTML, paginated list CBV, detail CBV, admin, templates |
+| `experiences/` | Professional experiences timeline: models, CBVs, admin, templates |
+| `blog/` | Markdown blog: models with auto-rendered HTML, paginated list CBV, detail CBV, admin, templates; `BlogPostEmbedding` for pgvector storage |
 | `templates/` | Project-level templates (`base.html`, plus per-section subdirs: `projects/`, `experiences/`, `blog/`) |
 | `static/` | Collected static files + custom CSS (`theme.css`, `base.css`, `icons.css`) and JS (`mobile-nav.js`, `tailwind-config.js`) |
 | `media/` | User-uploaded media (project media files) |
@@ -73,7 +74,28 @@ When performing these actions, ALWAYS invoke the corresponding skill FIRST:
 | `/experiences/` | `ExperienceListView` | Professional experiences timeline |
 | `/blog/` | `BlogListView` | Blog index (paginated bento grid, category filter, AJAX load-more) |
 | `/blog/<slug>/` | `BlogPostDetailView` | Single blog post |
-| `/admin/` | Django admin | Content management |
+| `/admin/` | Django admin | Content management (including `BlogPostEmbedding`) |
+
+## Vector Embeddings
+
+`BlogPostEmbedding` (`blog/models.py`) stores pgvector embeddings of blog posts for future semantic search / similarity queries.
+
+- **Storage:** `VectorField(dimensions=384)` — sized for sentence-transformers `all-MiniLM-L6-v2` or compatible 384-dim embedders.
+- **Relation:** `ForeignKey(BlogPost, on_delete=CASCADE, related_name="embeddings")` — deleting a post cascades to its embeddings.
+- **Metadata:** `model_name` char field (default `"all-MiniLM-L6-v2"`) so multiple embedding models can coexist per post.
+- **Constraint:** `unique_together = (post, model_name)` — same post + same model is unique; same post with different models is allowed. Lets you swap embedding providers without losing prior vectors.
+- **Extension:** The `vector` postgres extension is enabled by `blog/migrations/0002_blogpostembedding.py` via `VectorExtension()`.
+- **Backend requirement:** postgres only. The `BlogPostEmbeddingModelTests` test class is `@skipUnless(connection.vendor == "postgresql", ...)`-guarded and skips on SQLite. The `BlogPostEmbeddingAdminTests` class (admin-registration only) runs on any backend.
+- **Not populated automatically** — embeddings must be inserted via Django admin, shell, management command, or external pipeline.
+
+To run the postgres-only embedding tests:
+
+```bash
+docker-compose up --build -d
+docker-compose exec app python manage.py test blog.tests.BlogPostEmbeddingModelTests -v 2
+```
+
+When adding similarity-search views or HNSW/IVFFlat indexes on the `embedding` column, follow the existing `select_related` / `prefetch_related` conventions in the views. Defer adding indexes until row count justifies the build cost (rule of thumb: >1k rows).
 
 ## Performance & Query Patterns
 - Use `select_related` for ForeignKey access and `prefetch_related` for M2M / reverse FK in CBV `get_context_data` to avoid N+1 queries.
@@ -128,18 +150,15 @@ When modifying models in `projects/models.py`, `experiences/models.py`, or `blog
    docker-compose exec app python manage.py migrate
    ```
 
+Note: the `blog.0002_blogpostembedding` migration runs `VectorExtension()` to enable the `vector` extension on postgres. The extension is enabled automatically on the postgres container — no manual `CREATE EXTENSION` is needed.
+
 ### 2. Running Tests
 Run standard Django tests:
 ```bash
 docker-compose exec app python manage.py test
 ```
 
-### 3. Loading Fixtures
-```bash
-docker-compose exec app python manage.py loaddata experiences.fixtures.initial_experiences
-```
-
-### 4. Adding Dependencies
+### 3. Adding Dependencies
 As we are using `uv` for dependency management, to add a new package:
 ```bash
 uv add <package-name>
@@ -149,7 +168,7 @@ Then rebuild the Docker image to include the new dependency:
 docker-compose up --build
 ```
 
-### 5. Customizing Templates
+### 4. Customizing Templates
 - Project-level templates live in `templates/` (with `base.html` and per-section subdirs: `projects/`, `experiences/`, `blog/`).
 - Per-app overrides go in `<app>/templates/<app>/...`.
 - Tailwind is loaded via CDN in `base.html`; custom utilities are defined in `static/js/tailwind-config.js` and the theme lives in `static/css/theme.css`.

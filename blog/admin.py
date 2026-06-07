@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import BlogPost, Category, Tag
+from .models import BlogPost, BlogPostEmbedding, Category, Tag
 
 
 @admin.register(BlogPost)
@@ -44,3 +44,14 @@ class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     search_fields = ("name",)
     ordering = ("name",)
+
+
+@admin.register(BlogPostEmbedding)
+class BlogPostEmbeddingAdmin(admin.ModelAdmin):
+    list_display = ("post", "model_name", "created_at", "updated_at")
+    list_filter = ("model_name",)
+    search_fields = ("post__title",)
+    raw_id_fields = ("post",)
+    readonly_fields = ("created_at", "updated_at")
+    ordering = ("post", "model_name")
+    list_per_page = 50

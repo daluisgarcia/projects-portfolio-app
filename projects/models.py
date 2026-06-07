@@ -8,10 +8,7 @@ class TechnologyManager(models.Manager):
     """Default manager for Technology.
 
     Adds get_by_natural_key so that the fixture deserializer can resolve
-    M2M references in experiences/fixtures/initial_experiences.json by
-    Technology name (via the natural_key() method) instead of by primary
-    key. Without this, loaddata fails with a ValidationError trying to
-    coerce the name string to an integer PK.
+    M2M references to Technology by name instead of by ID.
     """
 
     def get_by_natural_key(self, name):
@@ -51,9 +48,7 @@ class Technology(models.Model):
     def __str__(self):
         return self.name
 
-    # Return the natural key for fixture serialization. Used by loaddata to resolve
-    # M2M references in experiences/fixtures/initial_experiences.json by Technology name
-    # rather than by primary key (which would be brittle across environments).
+    # Return the natural key for fixture serialization.
     def natural_key(self):
         return (self.name,)
 

@@ -1,6 +1,6 @@
 services:
   portfolio-db:
-    image: postgres:17
+    image: pgvector/pgvector:pg17
     container_name: portfolio-db
     ports:
       - "5433:5432"

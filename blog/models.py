@@ -4,6 +4,7 @@ import markdown
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
+from pgvector.django import VectorField
 
 
 class Category(models.Model):
@@ -102,3 +103,36 @@ class BlogPost(models.Model):
             self.published_at = timezone.now()
 
         super().save(*args, **kwargs)
+
+
+class BlogPostEmbedding(models.Model):
+    """Vector embedding of a blog post for semantic search / similarity.
+
+    Stores a fixed-dimension vector (384 — sized for the sentence-transformers
+    ``all-MiniLM-L6-v2`` model or compatible 384-dim embedders) keyed by
+    the embedding model name. The ``(post, model_name)`` unique constraint
+    allows storing embeddings from multiple models side-by-side, so swapping
+    the embedding provider later does not lose prior vectors.
+
+    Requires the ``pgvector`` PostgreSQL extension. The extension is enabled
+    by the initial migration of this model via ``VectorExtension()``.
+    """
+
+    post = models.ForeignKey(
+        BlogPost,
+        on_delete=models.CASCADE,
+        related_name="embeddings",
+    )
+    embedding = VectorField(dimensions=384)
+    model_name = models.CharField(max_length=100, default="all-MiniLM-L6-v2")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [("post", "model_name")]
+        ordering = ("post", "model_name")
+        verbose_name = "Blog Post Embedding"
+        verbose_name_plural = "Blog Post Embeddings"
+
+    def __str__(self):
+        return f"Embedding for {self.post.title} ({self.model_name})"

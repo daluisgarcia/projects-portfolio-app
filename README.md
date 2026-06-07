@@ -10,13 +10,15 @@ For design notes and architectural decisions, see [`DESIGN.md`](./DESIGN.md).
 - **Projects gallery** — Filterable by field, with media galleries, technologies, and methodology tags.
 - **Experiences timeline** — Professional history with skill chips, accent styles, and a present/future date convention (`end_date` null renders as "Present").
 - **Blog** — Markdown-rendered posts with categories, tags, related posts, featured posts, pagination, category filter, and an AJAX "load more" handler. Reading time is auto-computed from word count.
+- **Vector embeddings** — `BlogPostEmbedding` stores 384-dim pgvector vectors of blog posts (default model `all-MiniLM-L6-v2`) for future semantic search / similarity queries. Postgres-only.
 - **Django admin** — Full content management for all three apps.
 
 ## Tech Stack
 
 - **Language:** Python 3.13
 - **Framework:** Django 6.0+ (class-based views, server-rendered templates)
-- **Database:** PostgreSQL 17 (containerized); SQLite is the default for local dev
+- **Database:** PostgreSQL 17 with pgvector extension (containerized; `pgvector/pgvector:pg17` image); SQLite is the default for local dev (no vector support)
+- **Vector store:** `pgvector` Python package + postgres `vector` extension (384-dim blog embeddings)
 - **Frontend:** Django templates + Tailwind CSS (CDN) + custom CSS/JS in `static/`
 - **Blog rendering:** `markdown` library (with `fenced_code`, `tables`, `nl2br` extensions)
 - **Dependency management:** `uv` (PEP 621 `pyproject.toml`)
@@ -58,7 +60,7 @@ services:
 | `app/` | Django project config (`settings.py`, `urls.py`, `wsgi.py`, `asgi.py`) |
 | `projects/` | Landing page + projects gallery: models, CBVs, admin, templates |
 | `experiences/` | Professional experiences timeline: models, CBVs, admin, fixtures, templates |
-| `blog/` | Markdown blog: models with auto-rendered HTML, paginated list CBV, detail CBV, admin, templates |
+| `blog/` | Markdown blog: models with auto-rendered HTML, paginated list CBV, detail CBV, admin, templates, plus `BlogPostEmbedding` for pgvector storage |
 | `templates/` | Project-level templates (`base.html`, plus per-section subdirs: `projects/`, `experiences/`, `blog/`) |
 | `static/` | Collected static files + custom CSS (`theme.css`, `base.css`, `icons.css`) and JS (`mobile-nav.js`, `tailwind-config.js`) |
 | `media/` | User-uploaded media (project media files) |
@@ -70,6 +72,8 @@ services:
 | `README.md` | This file |
 
 ## Database
+
+The `portfolio-db` service runs on the `pgvector/pgvector:pg17` image — same env vars (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`) as plain postgres, plus the `vector` extension. The extension is enabled automatically by the `blog.0002_blogpostembedding` migration via `VectorExtension()`.
 
 The database is initialized automatically by `prepare-django-db.sh`, which:
 1. Runs migrations (`migrate`)
@@ -87,6 +91,16 @@ To open a database shell:
 ```bash
 docker-compose exec app python manage.py dbshell
 ```
+
+## Vector Embeddings
+
+`BlogPostEmbedding` (`blog/models.py`) stores 384-dim pgvector vectors of blog posts for future semantic search / similarity queries.
+
+- **Storage:** `VectorField(dimensions=384)` — sized for sentence-transformers `all-MiniLM-L6-v2` or compatible 384-dim embedders.
+- **Relation:** `ForeignKey(BlogPost, on_delete=CASCADE, related_name="embeddings")` — deleting a post cascades to its embeddings.
+- **Metadata:** `model_name` char field (default `"all-MiniLM-L6-v2"`) so multiple embedding models can coexist per post. `unique_together = (post, model_name)` allows swapping the embedding provider later without losing prior vectors.
+- **Backend requirement:** postgres only — the `vector` column type and the extension are not available on SQLite. Use `docker-compose exec app python manage.py test blog` to exercise the embedding model tests.
+- **Not populated automatically** — embeddings must be inserted via Django admin, shell, management command, or external pipeline.
 
 ## Environment Variables
 
