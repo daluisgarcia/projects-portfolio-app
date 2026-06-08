@@ -71,9 +71,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 # )
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8000",
-    "https://daluisgarcia.bringingtech.com",
-    "https://daluisgarcia.github.io",
+    "https://daluis.dev",
 ]
 
 ROOT_URLCONF = "app.urls"
