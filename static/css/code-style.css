@@ -1,0 +1,69 @@
+.code-cell {
+    background: #010f1f;
+    border-left: 4px solid #444748;
+}
+.code-cell:hover {
+    border-left-color: #76ff61;
+}
+.syntax-keyword { color: #f399ff; }
+.syntax-string { color: #9990ff; }
+.syntax-comment { color: #8e9192; }
+.syntax-function { color: #07fa16; }
+
+/* .syntax-keyword { color: #ff13ec; }
+.syntax-string { color: #4ce703; }
+.syntax-comment { color: #8e9192; }
+.syntax-function { color: #38b1ff; }
+.syntax-variable { color: #e53d00; } */
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+.output-cell {
+    border-left: 4px solid transparent;
+}
+
+.cursor {
+    display: inline-block;
+    width: 8px;
+    height: 18px;
+    background: #ADFF2F;
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+}
+
+.execution-count {
+    font-family: 'JetBrains Mono', monospace;
+    color: #8e9192;
+    width: 50px;
+    text-align: right;
+    padding-right: 15px;
+    user-select: none;
+}
+.execution-count::before {
+    content: "In [";
+    font-family: 'JetBrains Mono', monospace;
+}
+.execution-count::after {
+    content: "]:";
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.output-count{
+    font-family: 'JetBrains Mono', monospace;
+    color: #8e9192;
+    width: 50px;
+    text-align: right;
+    padding-right: 15px;
+    user-select: none;
+}
+.output-count::before {
+    content: "Out [";
+    font-family: 'JetBrains Mono', monospace;
+}
+.output-count::after {
+    content: "]:";
+    font-family: 'JetBrains Mono', monospace;
+}

@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Data Science/Software Engineering Portfolio{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/code-style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-gutter space-y-8">
+
+    <div class="flex group pt-4">
+        <div class="flex-1 pl-6">
+            <div class="max-w-3xl">
+                <span class="font-label-caps text-label-caps text-tertiary mb-4 block tracking-widest uppercase">{{ profile.role }}</span>
+                <h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-background mb-6 leading-tight">
+                    Building <span class="text-secondary">Robust Systems</span> &amp; Intelligent Insights
+                </h1>
+                <p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl">
+                    {{ profile.years }} years of Backend engineering expertise supports data-driven decision-making and scalable architectures.
+                    I specialize in bridging the gap between software engineering rigor and data science innovation to deliver impactful solutions.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a class="bg-secondary text-on-secondary px-8 py-4 rounded-lg font-headline-sm text-headline-sm hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+                        href="/projects/">
+                        Explore Projects
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                    <a class="border border-outline-variant/50 text-on-background px-8 py-4 rounded-lg font-headline-sm text-headline-sm hover:bg-surface-container-high transition-all"
+                        href="/blog/">
+                        Read Insights
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex pt-4">
+        <div class="flex-1">
+            <div
+                class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-center bg-surface-container-low p-8 rounded-xl border border-outline-variant/10">
+                <div class="md:col-span-4 relative">
+                    <div
+                        class="aspect-square bg-surface-container-highest rounded-xl overflow-hidden border border-outline-variant/20 shadow-xl">
+                        <img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
+                            data-alt="Technical circuit board close-up"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuATz6bz9G_3ki657bLZZD9lqvV5iUAApJ01dFyX-3qCgTzPsVfS1ARQmmzmgzzv2Tz3tPOqTe1j6MpLC1mhIiB7GNR8dPk2cKqZghftlUxQQInwXck6L6KGJISyU7vn7fETw_sfuKtAlqcqrtk_9y6G0mE8-5QRBymzJdwimYWVC0hUM4M3oMOU19ps4_ciCM6yIY967dCtIGuQAx06nyIJxJPuC0M1cuWCSl2aIWZITAL5yRycH8nG2A7iLU7-wmY4vp2l1pCclI5_">
+                    </div>
+                </div>
+                <div class="md:col-span-8 md:pl-8">
+                    <h2 class="font-headline-md text-headline-md text-on-background mb-6">The Engineering behind Intelligence</h2>
+                    <div class="space-y-4 font-body-md text-on-surface-variant">
+                        <p>
+                            In today's landscape, a model is only as powerful as the pipeline that serves it. I
+                            specialize in developing scalable Python-based backend architectures.
+                        </p>
+                        <p>
+                            My approach combines the <strong class="text-secondary">rigor of software
+                            engineering</strong>—clean code, CI/CD, testing—with the <strong
+                            class="text-tertiary">exploratory depth of data science</strong>.
+                        </p>
+                    </div>
+                    <div class="mt-8 grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-surface-container rounded-lg border border-outline-variant/10">
+                            <span class="material-symbols-outlined text-secondary mb-2">terminal</span>
+                            <h4 class="font-label-caps text-on-surface mb-1 uppercase">Backend</h4>
+                            <p class="font-code-sm text-code-sm text-on-primary-container">Django, FastAPI, SQL, Golang, AWS</p>
+                        </div>
+                        <div class="p-4 bg-surface-container rounded-lg border border-outline-variant/10">
+                            <span class="material-symbols-outlined text-tertiary mb-2">insights</span>
+                            <h4 class="font-label-caps text-on-surface mb-1 uppercase">Data Science</h4>
+                            <p class="font-code-sm text-code-sm text-on-primary-container">Tensorflow, PyTorch, ML Ops, MLflow, HuggingFace</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pt-8 pl-4">
+        <h1 class="font-headline-md text-headline-md text-on-background">Featured <span class="text-secondary">Projects</span></h1>
+    </div>
+
+    <!-- Cell 1: Projects Code -->
+    <div class="flex group">
+        <div class="execution-count pt-4 hidden md:block">1</div>
+        <div class="flex-1 code-cell p-6 rounded-r-lg shadow-inner">
+            <div class="font-code-sm text-code-sm leading-relaxed">
+                <div><span class="syntax-keyword">import</span> portfolio_core <span class="syntax-keyword">as</span> pc
+                </div>
+                <br>
+                <div>projects = pc.<span class="syntax-function">fetch_projects</span>(limit=<span
+                        class="syntax-string">"featured"</span>)</div>
+                <div>projects.<span class="syntax-function">display_grid</span>(layout=<span
+                        class="syntax-string">"bento"</span>)</div>
+            </div>
+        </div>
+    </div>
+    <!-- Cell 1 Output: Projects Bento -->
+    <div class="flex pt-4" id="projects">
+        <div class="output-count hidden md:block">1</div>
+        <div class="flex-1 output-cell pl-6">
+            {% if projects %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                {% for project in projects %}
+                {% if forloop.first %}
+                <div class="md:col-span-2 md:row-span-2 group">
+                    <div
+                        class="relative h-full min-h-[400px] rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container-high transition-transform duration-500 hover:-translate-y-2">
+                        {% if project.media_files.all %}
+                        <img class="absolute inset-0 w-full h-full object-cover opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700"
+                            data-alt="{{ project.name }}" src="{{ project.media_files.all.0.file.url }}">
+                        {% else %}
+                        <img class="absolute inset-0 w-full h-full object-cover opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700"
+                            data-alt="{{ project.name }}"
+                            src="https://via.placeholder.com/800x600/051424/ffb599?text={{ project.name|urlencode }}">
+                        {% endif %}
+                        <div
+                            class="absolute bottom-0 p-8 w-full bg-gradient-to-t from-surface-container-lowest to-transparent">
+                            <div class="flex gap-2 mb-4">
+                                {% for field in project.tech_fields.all|slice:":3" %}
+                                <span
+                                    class="bg-surface-container-highest/80 backdrop-blur-md px-3 py-1 rounded font-code-sm text-code-sm text-secondary">
+                                    <span class="{{ field.icon_name }}"></span>
+                                    {{ field.name }}
+                                </span>
+                                {% endfor %}
+                                |
+                                {% for tech in project.technologies.all|slice:":3" %}
+                                <span
+                                    class="bg-surface-container-highest/80 backdrop-blur-md px-3 py-1 rounded font-code-sm text-code-sm text-secondary">
+                                    <span class="{{ tech.icon_name }}"></span>
+                                    {{ tech.name }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                            <h3 class="font-headline-md text-headline-md text-on-background mb-2">{{ project.name }}
+                            </h3>
+                            <p class="font-body-md text-on-surface-variant max-w-md mb-4">{{ project.description }}</p>
+                            {% if project.project_link or project.github_link %}
+                            <a class="inline-flex items-center gap-2 text-secondary font-label-caps text-label-caps border-b border-secondary/0 hover:border-secondary transition-all"
+                                href="{{ project.project_link|default:project.github_link|default:'#' }}" target="_blank" rel="noopener noreferrer">
+                                EXPLORE REPO
+                            </a>
+                            {% else %}
+                            <p class="text-on-surface-variant inline-flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">lock</span>
+                                No link available.
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="group h-full">
+                    <div
+                        class="h-full rounded-xl p-8 border border-outline-variant/20 bg-surface-container transition-transform duration-500 hover:-translate-y-2">
+                        <span class="material-symbols-outlined text-4xl text-tertiary mb-6">code</span>
+                        <h3 class="font-headline-sm text-headline-sm text-on-background mb-4">{{ project.name }}</h3>
+                        <p class="font-body-md text-on-surface-variant mb-6">{{ project.description }}</p>
+                        <div class="flex flex-wrap gap-2">
+                            {% for field in project.tech_fields.all|slice:":3" %}
+                            <span
+                                class="font-code-sm text-code-sm text-on-primary-container px-2 py-1 bg-surface-container-high rounded">
+                                <span class="{{ field.icon_name }}"></span>
+                                {{ field.name }}
+                            </span>
+                            {% endfor %}
+                            |
+                            {% for tech in project.technologies.all %}
+                            <span
+                                class="font-code-sm text-code-sm text-on-primary-container px-2 py-1 bg-surface-container-high rounded">
+                                <span class="{{ tech.icon_name }}"></span>
+                                {{ tech.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <p class="text-on-surface-variant font-body-lg">No featured projects yet. Check back soon.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="pt-8 pl-4" id="contact">
+        <h1 class="font-headline-md text-headline-md text-on-background">
+            Let me find the <span class="text-secondary">insights in your data</span>
+        </h1>
+    </div>
+
+    <!-- Cell 2: Hero Code -->
+    <div class="flex group">
+        <div class="execution-count hidden md:block">2</div>
+        <div class="flex-1 code-cell p-6 rounded-r-lg shadow-inner relative">
+            <button
+                class="absolute top-4 right-4 flex items-center gap-2 bg-secondary px-3 py-1 rounded hover:bg-secondary-dark text-on-secondary transition-all"
+                id="run-hero"
+            >
+                <span class="material-symbols-outlined text-[22px]">play_arrow</span>
+                <span class="font-label-caps text-[17px]">Show contact</span>
+            </button>
+            <div class="font-code-sm text-code-sm leading-relaxed space-y-1 overflow-x-auto">
+                <div><span class="syntax-keyword">from</span> skills <span class="syntax-keyword">import</span>
+                    SystemArchitect, BackendEngineer, DataScientist</div>
+                <br>
+                <div class="syntax-comment"># Define professional profile</div>
+                <div>profile = pc.<span class="syntax-function">Profile</span>(</div>
+                <div class="pl-8">
+                    role=
+                    <span class="syntax-string">{{ profile.role }}</span>,
+                </div>
+                <div class="pl-8">
+                    vision=
+                    <span class="syntax-string">{{ profile.vision }}</span>,
+                </div>
+                <div class="pl-8">experience_years=<span class="syntax-string">"6+"</span></div>
+                <div>)</div>
+                <br>
+                <div>pc.<span class="syntax-function">contact_init</span>(message=
+                    <span class="syntax-string">"Let's build something intelligent."</span>, profile=
+                    <span class="syntax-string">profile</span>)
+                    <span class="cursor"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Cell 2 Output: Contact Info -->
+    <div class="flex transition-all duration-700 opacity-0 translate-y-4" id="hero-output">
+        <div class="output-count hidden md:block">2</div>
+        <div class="flex-1 output-cell">
+            <div class="p-12 md:p-20 rounded-2xl bg-surface-container-high border border-outline-variant/30 text-center">
+                <h2 class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-background mb-6">Let's
+                    build something <span class="text-secondary">intelligent.</span></h2>
+                <p class="font-body-lg text-on-surface-variant mb-10 max-w-2xl mx-auto">
+                    Whether you need a robust data pipeline or high-performance backend architecture, I'm ready to
+                    tackle the complexity.
+                </p>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                    <a class="bg-secondary text-on-secondary px-10 py-4 rounded-lg font-headline-sm text-headline-sm hover:brightness-110 transition-all w-full md:w-auto"
+                        href="mailto:daluisgarcia@gmail.com">
+                        Get In Touch
+                    </a>
+                    <a class="bg-surface-container-highest text-on-surface px-10 py-4 rounded-lg font-headline-sm text-headline-sm hover:bg-surface-bright transition-all w-full md:w-auto"
+                        href="https://github.com/daluisgarcia">
+                        View Github
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/landing.js' %}"></script>
+{% endblock %}

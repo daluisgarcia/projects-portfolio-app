@@ -42,13 +42,14 @@ ALLOWED_HOSTS = str(env("ALLOWED_HOSTS", default="")).split(",")
 
 INSTALLED_APPS = [
     "projects.apps.ProjectsConfig",
+    "experiences.apps.ExperiencesConfig",
+    "blog.apps.BlogConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
     "corsheaders",
 ]
 
@@ -80,7 +81,7 @@ ROOT_URLCONF = "app.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

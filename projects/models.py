@@ -4,6 +4,17 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
+class TechnologyManager(models.Manager):
+    """Default manager for Technology.
+
+    Adds get_by_natural_key so that the fixture deserializer can resolve
+    M2M references to Technology by name instead of by ID.
+    """
+
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class Technology(models.Model):
     # class TechnologyType(models.TextChoices):
     #     LANGUAGE = 'Language', 'Language'
@@ -29,12 +40,21 @@ class Technology(models.Model):
 
     base_tech = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
 
+    # Custom manager exposes get_by_natural_key for the fixture deserializer.
+    # Naming the attribute `objects` makes it the default manager; existing
+    # call sites that do `Technology.objects.filter(...)` keep working.
+    objects = TechnologyManager()
+
     def __str__(self):
         return self.name
 
+    # Return the natural key for fixture serialization.
+    def natural_key(self):
+        return (self.name,)
+
     def time_of_experience(self) -> str:
         years_difference = datetime.now().year - self.date_experience_began.year
-        
+
         if years_difference == 0:
             return '<1 year'
 

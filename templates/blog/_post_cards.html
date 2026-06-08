@@ -1,0 +1,139 @@
+{% comment %}
+   Partial — renders the bento-grid cards for a page of posts.
+
+   Context expected:
+     - page_obj:           Django Page object (or list-like with __iter__)
+     - featured_post:      BlogPost or None (set on first page only)
+     - other_posts:        list of BlogPost (medium cards, all of them on
+                            pages 2+; first is the side card on page 1)
+     - featured_split:     bool — True for page 1, False for pages 2+
+
+   No <div> wrapper — the cards are emitted as siblings so the AJAX
+   "load more" handler can append them to the existing grid without
+   nesting issues.
+{% endcomment %}
+
+{% if featured_split %}
+    {# Page 1: 1 featured (col-span-8) + 1 side (col-span-4) + N medium (col-span-4) #}
+    {% if featured_post %}
+        <a class="md:col-span-8 flex flex-col md:flex-row bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden bento-card group"
+            data-category="{{ featured_post.category.slug }}"
+            href="{% url 'blog_detail' slug=featured_post.slug %}">
+            <div class="md:w-1/2 h-64 md:h-auto relative overflow-hidden">
+                {% if featured_post.cover_image_url %}
+                    <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100"
+                        alt="{{ featured_post.cover_image_alt|default:featured_post.title }}"
+                        src="{{ featured_post.cover_image_url }}" />
+                {% else %}
+                    <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100"
+                        alt="{{ featured_post.cover_image_alt|default:featured_post.title }}"
+                        src="https://via.placeholder.com/800x450/051424/ffb599?text={{ featured_post.title|urlencode }}" />
+                {% endif %}
+                <div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent opacity-60"></div>
+            </div>
+            <div class="p-lg md:w-1/2 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-sm mb-md">
+                        <span class="text-secondary font-code-md text-code-md">{{ featured_post.category.name }}</span>
+                        <span class="text-outline text-code-md">•</span>
+                        <span class="text-on-surface-variant font-code-md text-code-md">{{ featured_post.read_time_minutes }} min read</span>
+                    </div>
+                    <h2 class="text-headline-lg font-headline-lg text-on-surface mb-md group-hover:text-primary transition-colors">{{ featured_post.title }}</h2>
+                    <p class="text-on-surface-variant font-body-md text-body-md mb-lg">{{ featured_post.excerpt }}</p>
+                </div>
+                <div class="flex items-center gap-md pt-md border-t border-outline-variant/10 flex-wrap">
+                    {% for tag in featured_post.tags.all %}
+                        <span class="px-sm py-1 bg-surface-container-high rounded font-code-md text-code-md text-primary">{{ tag.name }}</span>
+                    {% endfor %}
+                    <div class="ml-auto flex items-center gap-xs text-secondary">
+                        <span class="font-label-caps text-label-caps">Read Execution</span>
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+    {% endif %}
+
+    {% if other_posts %}
+        {% with other_posts|first as side_post %}
+            <a class="md:col-span-4 bg-surface-container-low border border-outline-variant/30 rounded-xl p-lg flex flex-col justify-between bento-card group"
+                data-category="{{ side_post.category.slug }}"
+                href="{% url 'blog_detail' slug=side_post.slug %}">
+                <div class="h-40 mb-lg rounded-lg overflow-hidden border border-outline-variant/20 relative">
+                    {% if side_post.cover_image_url %}
+                        <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            alt="{{ side_post.cover_image_alt|default:side_post.title }}"
+                            src="{{ side_post.cover_image_url }}" />
+                    {% else %}
+                        <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            alt="{{ side_post.cover_image_alt|default:side_post.title }}"
+                            src="https://via.placeholder.com/800x450/051424/ffb599?text={{ side_post.title|urlencode }}" />
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="text-secondary font-code-md text-code-md mb-xs block">{{ side_post.category.name }}</span>
+                    <h3 class="text-2xl font-headline-lg font-semibold text-on-surface mb-sm group-hover:text-primary transition-colors">
+                        {{ side_post.title }}</h3>
+                    <p class="text-on-surface-variant text-sm mb-lg">{{ side_post.excerpt }}</p>
+                </div>
+                <div class="flex items-center justify-between text-outline">
+                    <span class="font-code-md text-code-md">{{ side_post.read_time_minutes }} min read</span>
+                    <span class="material-symbols-outlined">analytics</span>
+                </div>
+            </a>
+        {% endwith %}
+
+        {% for post in other_posts|slice:"1:" %}
+            <a class="md:col-span-4 bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden bento-card group"
+                data-category="{{ post.category.slug }}"
+                href="{% url 'blog_detail' slug=post.slug %}">
+                <div class="h-48">
+                    {% if post.cover_image_url %}
+                        <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                            alt="{{ post.cover_image_alt|default:post.title }}"
+                            src="{{ post.cover_image_url }}" />
+                    {% else %}
+                        <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                            alt="{{ post.cover_image_alt|default:post.title }}"
+                            src="https://via.placeholder.com/800x450/051424/ffb599?text={{ post.title|urlencode }}" />
+                    {% endif %}
+                </div>
+                <div class="p-md">
+                    <span class="text-secondary font-code-md text-code-md mb-xs block">{{ post.category.name }}</span>
+                    <h3 class="text-2xl font-headline-lg font-semibold text-on-surface mb-sm group-hover:text-primary transition-colors">{{ post.title }}</h3>
+                    <p class="text-on-surface-variant text-sm mb-md">{{ post.excerpt }}</p>
+                    <div class="flex items-center gap-sm">
+                        <span class="text-outline font-code-md text-code-md">{{ post.read_time_minutes }} min read</span>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    {% endif %}
+{% else %}
+    {# Pages 2+: all uniform medium cards (col-span-4 each) #}
+    {% for post in other_posts %}
+        <a class="md:col-span-4 bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden bento-card group"
+            data-category="{{ post.category.slug }}"
+            href="{% url 'blog_detail' slug=post.slug %}">
+            <div class="h-48">
+                {% if post.cover_image_url %}
+                    <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                        alt="{{ post.cover_image_alt|default:post.title }}"
+                        src="{{ post.cover_image_url }}" />
+                {% else %}
+                    <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                        alt="{{ post.cover_image_alt|default:post.title }}"
+                        src="https://via.placeholder.com/800x450/051424/ffb599?text={{ post.title|urlencode }}" />
+                {% endif %}
+            </div>
+            <div class="p-md">
+                <span class="text-secondary font-code-md text-code-md mb-xs block">{{ post.category.name }}</span>
+                <h3 class="text-2xl font-headline-lg font-semibold text-on-surface mb-sm group-hover:text-primary transition-colors">{{ post.title }}</h3>
+                <p class="text-on-surface-variant text-sm mb-md">{{ post.excerpt }}</p>
+                <div class="flex items-center gap-sm">
+                    <span class="text-outline font-code-md text-code-md">{{ post.read_time_minutes }} min read</span>
+                </div>
+            </div>
+        </a>
+    {% endfor %}
+{% endif %}

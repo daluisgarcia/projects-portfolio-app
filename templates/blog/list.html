@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Blog | Data Science/Software Engineering Portfolio{% endblock %}
+
+{% block main_class %}pt-32 pb-section-gap max-w-container-max mx-auto px-margin-mobile md:px-gutter{% endblock %}
+
+{% block extra_head %}
+{# Page-specific styles. The Tailwind config tokens (primary, secondary, on-*, surface-container-*, outline-variant, spacing scale, font families) are loaded globally by base.html. #}
+<link rel="stylesheet" href="{% static 'css/blog-list.css' %}">
+{% endblock %}
+
+{% block content %}
+    <header class="mb-xl flex flex-col md:flex-row md:items-end justify-between gap-lg">
+        <div class="max-w-2xl">
+            <span class="text-primary font-label-caps text-label-caps mb-sm block uppercase">Knowledge Base</span>
+            <h1 class="text-headline-xl font-headline-xl text-on-surface mb-md md:text-headline-xl text-3xl font-semibold">
+                {# Token note: the static mockup used `text-headline-lg-mobile` / `font-headline-lg-mobile` for the mobile headline size. The project's tailwind-config.js defines `headline-lg` (28px) but not a `-mobile` variant, so we fall back to Tailwind's default `text-3xl` + `font-semibold` on small screens. This matches the 24/32/600 sizing of the missing token. #}
+                Technical Insights &amp; Systems Architecture</h1>
+            <p class="text-on-surface-variant font-body-md text-body-md max-w-xl">
+                Exploring the intersection of MLOps, scalable backend systems, and the future of industrial-grade AI development.
+            </p>
+        </div>
+        {# Server-side filter via ?category=<slug>. Active state is driven by  #}
+        {# active_category_slug (computed in BlogListView.get_context_data). #}
+        <div class="flex flex-wrap gap-sm" id="blog-filter-chips">
+            <a href="{% url 'blog_list' %}"
+                class="px-md py-sm rounded font-label-caps text-label-caps {% if not active_category_slug %}bg-primary text-on-primary{% else %}border border-outline-variant/30 text-on-surface-variant hover:border-primary transition-all{% endif %}"
+                data-filter="all"
+                aria-pressed="{% if not active_category_slug %}true{% else %}false{% endif %}">All Posts</a>
+            {% for category in categories %}
+            <a href="?category={{ category.slug }}"
+                class="px-md py-sm rounded font-label-caps text-label-caps {% if active_category_slug == category.slug %}bg-primary text-on-primary{% else %}border border-outline-variant/30 text-on-surface-variant hover:border-primary transition-all{% endif %}"
+                data-filter="{{ category.slug }}"
+                aria-pressed="{% if active_category_slug == category.slug %}true{% else %}false{% endif %}">{{ category.name }}</a>
+            {% endfor %}
+        </div>
+    </header>
+
+    {# Active filter indicator — only visible when a category is selected. #}
+    {% if active_category %}
+        <div class="mb-md flex items-center gap-sm text-sm font-code-md text-code-md">
+            <span class="text-on-surface-variant">Filtering by:</span>
+            <span class="px-sm py-1 bg-primary-container/20 text-primary border border-primary/30 rounded">{{ active_category.name }}</span>
+            <a href="{% url 'blog_list' %}" class="text-secondary hover:underline ml-auto">Clear filter</a>
+        </div>
+    {% endif %}
+
+    {% if featured_post or other_posts %}
+        {# ============================================================ #}
+        {# BENTO BLOG GRID — render via the _post_cards partial so the  #}
+        {# AJAX "load more" handler (static/js/blog-list.js) can refetch #}
+        {# subsequent pages with ?partial=1 and append them as siblings. #}
+        {# Splitting is done in BlogListView.get_context_data.          #}
+        {# ============================================================ #}
+        <div id="blog-cards-grid" class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+            {% include "blog/_post_cards.html" %}
+        </div>
+
+        {# Pagination / Load More — rendered only when more pages exist. #}
+        {# The data-* attributes are read by initLoadMore() in blog-list.js. #}
+        {% if has_next %}
+            <div class="mt-xl flex justify-center">
+                <button id="load-more-btn"
+                    data-next-page="{{ next_page_number }}"
+                    data-page-size="{{ page_size }}"
+                    data-base-url="{% url 'blog_list' %}"
+                    class="group flex items-center gap-md border border-primary text-primary px-xl py-md rounded-lg font-label-caps text-label-caps hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+                    <span id="load-more-label">LOAD MORE LOGS</span>
+                    <span class="material-symbols-outlined group-hover:rotate-90 transition-transform">refresh</span>
+                </button>
+            </div>
+        {% endif %}
+    {% else %}
+        {# Empty state — no published posts yet. #}
+        <div class="glass-panel p-lg rounded-xl text-center">
+            <p class="font-body-md text-on-surface-variant">No blog posts published yet for this category.</p>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/blog-list.js' %}"></script>
+{% endblock %}

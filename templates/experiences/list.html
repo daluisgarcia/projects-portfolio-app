@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Experience | Data Science/Software Engineering Portfolio{% endblock %}
+
+{% block main_class %}pt-32 pb-section-gap max-w-container-max mx-auto px-margin-mobile md:px-gutter{% endblock %}
+
+{% block extra_head %}
+{# Page-specific styles. The Tailwind config tokens (electric-indigo, surface-container-*, spacing scale) are loaded globally by base.html. #}
+<link rel="stylesheet" href="{% static 'css/experiences.css' %}">
+{% endblock %}
+
+{% block content %}
+    <header class="mb-xl text-center md:text-left">
+        <h1 class="font-headline-xl text-headline-xl text-on-surface mb-xs">Professional Evolution</h1>
+        <p class="font-body-md text-on-surface-variant max-w-2xl">
+            Reducing the gap between business ideas and data-driven execution, one project at a time.
+            A journey through architecting high-scale systems, intelligent data pipelines and impactful machine learning solutions.
+        </p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+        {# ============================================================ #}
+        {# LEFT COLUMN: timeline of Experience rows from the DB         #}
+        {# Ordering handled in the view: display_order ASC, priority DESC, start_date DESC #}
+        {# ============================================================ #}
+        <section class="lg:col-span-8 relative">
+            <div class="absolute left-4 md:left-8 top-0 bottom-0 w-px timeline-line"></div>
+            <div class="space-y-12">
+                {% for experience in experiences %}
+                    {# accent_style drives the marker color (via .marker-* class) AND the chip text color (via .chips-* class). Lower-case the enum for the CSS class suffix. #}
+                    <div class="relative pl-12 md:pl-20 group">
+                        <div class="absolute left-2 md:left-6 top-0 w-5 h-5 rounded-full bg-electric-indigo border-4 border-surface shadow-[0_0_10px_#6366f1] z-10 marker marker-{{ experience.accent_style|lower }}"></div>
+                        <div class="glass-panel p-lg rounded-xl transition-all duration-300 hover:border-electric-indigo/50">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-md">
+                                <div>
+                                    <h3 class="font-headline-lg text-headline-lg text-on-surface">{{ experience.role_title }}</h3>
+                                    <p class="font-code-md text-code-md text-electric-indigo">{{ experience.company }}</p>
+                                </div>
+                                <span class="font-label-caps text-label-caps bg-surface-container-high px-sm py-1 rounded-md text-primary mt-sm md:mt-0">
+                                    {# Date pill: month + year, en-dash separator, "Present" when end_date is null. U+2013 en-dash, not a hyphen. #}
+                                    {{ experience.start_date|date:"M Y" }}{% if experience.end_date %} – {{ experience.end_date|date:"M Y" }}{% else %} – Present{% endif %}
+                                </span>
+                            </div>
+                            {% if experience.description %}
+                                <p class="font-body-md text-on-surface-variant mb-md leading-relaxed">{{ experience.description|linebreaksbr }}</p>
+                            {% endif %}
+                            {% if experience.skills.exists %}
+                                {# Skill chips: ordered by Technology.priority DESC, name ASC (handled by the prefetch_related in the view, but Django doesn't preserve M2M order — we sort in the template). #}
+                                <div class="flex flex-wrap gap-xs">
+                                    {% for skill in experience.skills.all|dictsortreversed:"priority"|dictsort:"name" %}
+                                        <span class="font-code-md text-[11px] px-sm py-1 border border-outline-variant/30 rounded bg-surface/40 chip chip-{{ experience.accent_style|lower }}">{{ skill.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="glass-panel p-lg rounded-xl text-center">
+                        <p class="font-body-md text-on-surface-variant">No experiences published yet...</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# ============================================================ #}
+        {# RIGHT COLUMN: sidebar panels (hardcoded HTML for v1)         #}
+        {# Per design decision: data-driven sidebar deferred to follow-up. #}
+        {# ============================================================ #}
+        <aside class="lg:col-span-4 space-y-lg">
+            {# Technical Proficiency — hardcoded bars #}
+            <div class="glass-panel p-lg rounded-xl">
+                <h4 class="font-label-caps text-label-caps text-electric-indigo mb-lg uppercase">Technical Proficiency</h4>
+                <div class="space-y-md">
+                    <div>
+                        <div class="flex justify-between font-code-md text-code-md mb-xs"><span>Python / ML Stack</span><span>90%</span></div>
+                        <div class="h-1 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-electric-indigo to-secondary w-[90%]"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between font-code-md text-code-md mb-xs"><span>SQL &amp; Data Ops</span><span>85%</span></div>
+                        <div class="h-1 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-electric-indigo to-secondary w-[85%]"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between font-code-md text-code-md mb-xs"><span>AWS / Cloud Native</span><span>80%</span></div>
+                        <div class="h-1 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-electric-indigo to-secondary w-[80%]"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between font-code-md text-code-md mb-xs"><span>Go / Systems Architecture</span><span>78%</span></div>
+                        <div class="h-1 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-electric-indigo to-secondary w-[78%]"></div></div>
+                    </div>
+                </div>
+            </div>
+            {# Core Stack — hardcoded icon grid #}
+            <div class="glass-panel p-lg rounded-xl">
+                <h4 class="font-label-caps text-label-caps text-electric-indigo mb-lg uppercase">Core Stack</h4>
+                <div class="grid grid-cols-2 gap-sm">
+                    <div class="bg-surface-container p-sm rounded border border-outline-variant/20 flex items-center gap-xs"><span class="material-symbols-outlined text-[18px] text-primary">terminal</span><span class="font-code-md text-[12px]">Python</span></div>
+                    <div class="bg-surface-container p-sm rounded border border-outline-variant/20 flex items-center gap-xs"><span class="material-symbols-outlined text-[18px] text-primary">hub</span><span class="font-code-md text-[12px]">Git</span></div>
+                    <div class="bg-surface-container p-sm rounded border border-outline-variant/20 flex items-center gap-xs"><span class="material-symbols-outlined text-[18px] text-primary">data_object</span><span class="font-code-md text-[12px]">SQL/PostgreSQL</span></div>
+                    <div class="bg-surface-container p-sm rounded border border-outline-variant/20 flex items-center gap-xs"><span class="material-symbols-outlined text-[18px] text-primary">cloud</span><span class="font-code-md text-[12px]">AWS</span></div>
+                    <div class="bg-surface-container p-sm rounded border border-outline-variant/20 flex items-center gap-xs"><span class="material-symbols-outlined text-[18px] text-primary">monitoring</span><span class="font-code-md text-[12px]">Learning</span></div>
+                    <div class="bg-surface-container p-sm rounded border border-outline-variant/20 flex items-center gap-xs"><span class="material-symbols-outlined text-[18px] text-primary">precision_manufacturing</span><span class="font-code-md text-[12px]">Discipline</span></div>
+                </div>
+            </div>
+            {# Featured Image panel — hardcoded image URL (same as static mockup) #}
+            <!-- <div class="relative overflow-hidden rounded-xl h-48 group">
+                <img alt="Code visualization" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7BzsxT-U3OjIxPnQfygCc2DXN3PeetlBsSs0hr3c8FnenTVXVnKRAJYc1PC2Ff-rUm9Uqnt0Fycd8FNaqf7AXNtlmNDJNB6rW3x5WwbgxlvxOlyDYDbi_ZF6eKRiNHDq-1Iu9ER1efRLCLB64VQr0Y8ZGIwEXPiG-m11WwxZOykMKbejfmIGgCaeSU1P6wrdaftTRQupX_tmpZLFqlYX7_w2dMiic_VzZX1UBkcE78L2YbhLUQgpeeNmh7w8ycw8GBr4smRFbuirw" />
+                <div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent opacity-60"></div>
+                <div class="absolute bottom-md left-md">
+                    <p class="font-label-caps text-label-caps text-secondary">Neural Network Arch</p>
+                </div>
+            </div>  -->
+        </aside>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+{# Page-specific JS — cursor-follow micro-interaction on .glass-panel. Cursor position is exposed as CSS custom properties --mouse-x and --mouse-y. #}
+<script src="{% static 'js/experiences.js' %}"></script>
+{% endblock %}

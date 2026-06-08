@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ post.title }} | Data Science/Software Engineering Portfolio{% endblock %}
+
+{# Hero takes the top space — no extra main padding. #}
+{% block main_class %}pt-16{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/blog-record.css' %}">
+{% endblock %}
+
+{% block content %}
+    {# Reading Progress Bar — fixed to top, width mutated by static/js/blog-record.js. #}
+    <div class="reading-progress-container">
+        <div id="reading-bar"></div>
+    </div>
+
+    {# ============================================================ #}
+    {# HERO SECTION                                                  #}
+    {# Background image as inline style; falls back to via.placeholder. #}
+    {# ============================================================ #}
+    {% if post.cover_image_url %}
+        <header class="relative w-full h-[614px] flex items-center overflow-hidden bg-cover bg-center"
+            style="background-image: url('{{ post.cover_image_url }}');">
+    {% else %}
+        <header class="relative w-full h-[614px] flex items-center overflow-hidden bg-cover bg-center"
+            style="background-image: url('https://via.placeholder.com/1920x614/051424/ffb599?text={{ post.title|urlencode }}');">
+    {% endif %}
+        <div class="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent"></div>
+        <div class="relative z-10 max-w-[800px] mx-auto px-margin-mobile md:px-gutter text-center">
+            {# Single category badge in primary color (the static mockup had two; we render one since BlogPost has a single category FK). #}
+            <div class="flex justify-center gap-sm mb-lg">
+                <span class="font-label-caps text-label-caps px-sm py-1 bg-primary-container/20 text-primary border border-primary/30 rounded">{{ post.category.name }}</span>
+            </div>
+            <h1 class="font-headline-xl text-3xl md:text-headline-xl font-bold mb-md leading-tight text-on-surface">
+                {# Token note: the static mockup used `text-headline-lg-mobile` for the mobile title size. Fall back to `text-3xl` (Tailwind default 30px) on small screens, then `md:text-headline-xl` (48/56/700) from the config. #}
+                {{ post.title }}
+            </h1>
+            <p class="font-code-md text-code-md text-on-surface-variant">
+                {# Author fallback for v1: hardcoded "By Daniel Luis". A full Author model is deferred. #}
+                Published: {{ post.published_at|date:"F j, Y" }} • {{ post.read_time_minutes }} min read • By Daniel Luis
+            </p>
+        </div>
+    </header>
+
+    {# ============================================================ #}
+    {# ARTICLE BODY                                                  #}
+    {# Rendered from the cached Markdown HTML computed in BlogPost.save(). #}
+    {# The static mockup had a hardcoded code-block section here — removed for v1; the author's #}
+    {# Markdown body is the single source of truth.                   #}
+    {# ============================================================ #}
+    <article class="blog-prose max-w-[800px] mx-auto px-margin-mobile md:px-gutter py-xl">
+        {{ post.body_html|safe }}
+        {# CTA / Divider #}
+        <div class="w-full h-px bg-outline-variant/30 my-xl"></div>
+    </article>
+
+    {# ============================================================ #}
+    {# RELATED ARTICLES                                              #}
+    {# Iterate over `related_posts` (the view's pre-filtered, capped  #}
+    {# to-3 list of published posts). DO NOT use post.related_posts.all — #}
+    {# that prefetch is unfiltered and would leak unpublished posts. #}
+    {# Hide the section entirely if the list is empty.               #}
+    {# ============================================================ #}
+    {% if related_posts %}
+        <section class="max-w-container-max mx-auto px-margin-mobile md:px-gutter pb-xl">
+            <h2 class="font-headline-lg text-2xl md:text-headline-lg font-semibold mb-lg">Related Articles</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+                {% for related in related_posts %}
+                    <a class="group bento-card rounded-xl overflow-hidden flex flex-col"
+                        href="{% url 'blog_detail' slug=related.slug %}">
+                        <div class="h-48 w-full overflow-hidden relative">
+                            {% if related.cover_image_url %}
+                                <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                                    alt="{{ related.cover_image_alt|default:related.title }}"
+                                    src="{{ related.cover_image_url }}" />
+                            {% else %}
+                                <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                                    alt="{{ related.cover_image_alt|default:related.title }}"
+                                    src="https://via.placeholder.com/800x450/051424/ffb599?text={{ related.title|urlencode }}" />
+                            {% endif %}
+                            <div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
+                        <div class="p-md">
+                            <span class="font-label-caps text-[10px] text-secondary mb-xs block uppercase">{{ related.category.name }}</span>
+                            <h4 class="text-xl font-headline-lg font-semibold text-on-surface group-hover:text-primary transition-colors">
+                                {# Token note: the static mockup used `font-headline-lg-mobile`. Fall back to `text-xl font-semibold` (Tailwind default 20px / weight 600). #}
+                                {{ related.title }}</h4>
+                            <p class="text-sm text-on-surface-variant mt-sm">
+                                {# Token note: `font-body-sm` / `text-body-sm` not in tailwind config. Use Tailwind's `text-sm` default. #}
+                                {{ related.excerpt }}</p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/blog-record.js' %}"></script>
+{% endblock %}
