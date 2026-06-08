@@ -200,3 +200,31 @@ class ExperienceCleanValidationTests(TestCase):
         )
         # Should not raise
         exp.full_clean()
+
+
+# --- SEO tests (Change: seo-overhaul) ---
+
+
+class ExperiencesSeoMetaTests(TestCase):
+    """Per-page SEO meta on the experiences timeline page.
+
+    Verifies the base.html SEO scaffolding (meta description, Open Graph,
+    Twitter Card, canonical, WebSite + Person JSON-LD) renders on
+    /experiences/ and that og:url is the absolute canonical URL.
+    """
+
+    def test_experiences_seo(self):
+        r = self.client.get(reverse("experiences"))
+        self.assertEqual(r.status_code, 200)
+        body = r.content.decode("utf-8")
+        for needle in [
+            '<meta name="description"',
+            'property="og:title"',
+            'property="og:url" content="https://daluis.dev/experiences/"',
+            'property="og:type"',
+            'name="twitter:card"',
+            'rel="canonical"',
+            '"@type":"WebSite"',
+            '"@type":"Person"',
+        ]:
+            self.assertIn(needle, body, f"missing SEO needle: {needle}")

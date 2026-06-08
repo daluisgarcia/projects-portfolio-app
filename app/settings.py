@@ -87,6 +87,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "app.seo.site_seo",
             ],
         },
     },
@@ -150,6 +151,18 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")  # for production collectstatic command
+
+# SEO / site identity (env-backed with safe defaults)
+SITE_URL = env("SITE_URL", default="https://daluis.dev")
+SITE_NAME = env("SITE_NAME", default="Daniel Luis — Portfolio")
+SITE_AUTHOR = env("SITE_AUTHOR", default="Daniel Luis")
+SITE_DEFAULT_OG_IMAGE = env("SITE_DEFAULT_OG_IMAGE", default="/static/img/og-default.png")
+SITE_TWITTER_HANDLE = env("SITE_TWITTER_HANDLE", default="")
+OG_LOCALE = env("OG_LOCALE", default="en_US")
+META_DESCRIPTION_DEFAULT = env(
+    "META_DESCRIPTION_DEFAULT",
+    default="Daniel Luis — Software Engineer & Data Scientist. Projects, professional experience, and engineering writing.",
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

@@ -1,7 +1,27 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ post.title }} | Data Science/Software Engineering Portfolio{% endblock %}
+{% block title %}{{ post.title }} — {{ site_name }}{% endblock %}
+
+{% block og_title %}{{ post.title }} — {{ site_name }}{% endblock %}
+
+{% block meta_description %}<meta name="description" content="{{ post.excerpt|default:post.body|striptags|truncatechars:160 }}">{% endblock %}
+
+{% block og_type %}<meta property="og:type" content="article">{% endblock %}
+
+{% block og_description %}{{ post.excerpt|default:meta_description_default }}{% endblock %}
+
+{% block og_image %}{% if post.cover_image_url %}{{ post.cover_image_url }}{% else %}{{ site_url }}{{ site_default_og_image }}{% endif %}{% endblock %}
+
+{% block canonical_url %}{{ canonical_url_for_post }}{% endblock %}
+
+{% block og_url %}{{ canonical_url_for_post }}{% endblock %}
+
+{% block json_ld %}
+    {{ block.super }}
+    {{ blogposting_json_ld|safe }}
+    {{ breadcrumb_json_ld|safe }}
+{% endblock %}
 
 {# Hero takes the top space — no extra main padding. #}
 {% block main_class %}pt-16{% endblock %}
@@ -39,7 +59,7 @@
             </h1>
             <p class="font-code-md text-code-md text-on-surface-variant">
                 {# Author fallback for v1: hardcoded "By Daniel Luis". A full Author model is deferred. #}
-                Published: {{ post.published_at|date:"F j, Y" }} • {{ post.read_time_minutes }} min read • By Daniel Luis
+                Published: {{ post.published_at|date:"F j, Y" }} • {{ post.read_time_minutes }} min read • By {{ site_author }}
             </p>
         </div>
     </header>

@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Projects | Data Science/Software Engineering Portfolio{% endblock %}
+{% block title %}Projects — {{ site_name }}{% endblock %}
+
+{% block og_title %}Projects — {{ site_name }}{% endblock %}
+
+{% block meta_description %}<meta name="description" content="Selected projects across data science, machine learning, and software engineering.">{% endblock %}
+
+{% block canonical_url %}{{ site_url }}{% url 'projects' %}{% endblock %}
+
+{% block og_url %}{{ site_url }}{% url 'projects' %}{% endblock %}
 
 {% block main_class %}pt-32 pb-section-gap max-w-container-max mx-auto px-margin-mobile md:px-gutter{% endblock %}
 

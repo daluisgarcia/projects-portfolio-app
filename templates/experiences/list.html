@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Experience | Data Science/Software Engineering Portfolio{% endblock %}
+{% block title %}Experience — {{ site_name }}{% endblock %}
+
+{% block og_title %}Experience — {{ site_name }}{% endblock %}
+
+{% block meta_description %}<meta name="description" content="Professional experience timeline: software engineering and data science roles, technologies used, and impact delivered.">{% endblock %}
+
+{% block canonical_url %}{{ site_url }}{% url 'experiences' %}{% endblock %}
+
+{% block og_url %}{{ site_url }}{% url 'experiences' %}{% endblock %}
 
 {% block main_class %}pt-32 pb-section-gap max-w-container-max mx-auto px-margin-mobile md:px-gutter{% endblock %}
 

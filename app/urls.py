@@ -19,6 +19,8 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
+from app.robots import robots_txt
+from app.sitemaps import sitemap_xml
 from blog.views import BlogListView, BlogPostDetailView
 from experiences.views import ExperienceListView
 from projects.views import LandingView, ProjectsView
@@ -27,6 +29,8 @@ from projects.views import LandingView, ProjectsView
 urlpatterns = (
     [
         path("admin/", admin.site.urls),
+        path("robots.txt", robots_txt, name="robots_txt"),
+        path("sitemap.xml", sitemap_xml, name="sitemap_xml"),
         path("", LandingView.as_view(), name="landing"),
         path("projects/", ProjectsView.as_view(), name="projects"),
         path("experiences/", ExperienceListView.as_view(), name="experiences"),

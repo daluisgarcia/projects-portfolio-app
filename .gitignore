@@ -4,6 +4,7 @@ __pycache__/
 media/
 static/admin/
 static/rest_framework/
+.DS_Store
 
 # Docker environment
 mysqldata/
