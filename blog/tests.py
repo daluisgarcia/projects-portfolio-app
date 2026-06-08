@@ -1150,3 +1150,183 @@ class BlogPostEmbeddingAdminTests(TestCase):
         # full <select> widget for the blogpost lookup (better for large
         # post tables).
         self.assertIn("post", BlogPostEmbeddingAdmin.raw_id_fields)
+
+
+# --- SEO tests (Change: seo-overhaul) ---
+
+
+class BlogSeoMetaTests(TestCase):
+    """Per-page SEO meta on the blog list + detail pages."""
+
+    @classmethod
+    def setUpTestData(cls):
+        # NB: Category has no ``description`` field on this project — the
+        # prompt template assumed one; we follow the existing
+        # ``BlogModelTests`` pattern (name + slug only).
+        cls.category = Category.objects.create(name="MLOps", slug="mlops")
+        cls.post = BlogPost.objects.create(
+            title="Hello World",
+            slug="hello-world",
+            body="x" * 200,
+            excerpt="An excerpt for testing SEO meta tags.",
+            cover_image_url="",
+            cover_image_alt="",
+            category=cls.category,
+            is_published=True,
+            published_at=timezone.now(),
+        )
+
+    def _assert_seo_present(self, response, expected_title_substring=""):
+        body = response.content.decode("utf-8")
+        self.assertIn('<meta name="description"', body)
+        self.assertIn('property="og:title"', body)
+        self.assertIn('property="og:description"', body)
+        self.assertIn('property="og:image"', body)
+        self.assertIn('property="og:url"', body)
+        self.assertIn('property="og:type"', body)
+        self.assertIn('property="og:site_name"', body)
+        self.assertIn('name="twitter:card"', body)
+        self.assertIn('name="twitter:title"', body)
+        self.assertIn('name="twitter:image"', body)
+        self.assertIn('rel="canonical"', body)
+        self.assertIn('"@type":"WebSite"', body)
+        self.assertIn('"@type":"Person"', body)
+        if expected_title_substring:
+            self.assertIn(expected_title_substring, body)
+
+    def test_blog_list_seo(self):
+        r = self.client.get(reverse("blog_list"))
+        self.assertEqual(r.status_code, 200)
+        self._assert_seo_present(r, expected_title_substring="Blog")
+
+    def test_blog_list_seo_canonical_strips_category(self):
+        r = self.client.get(reverse("blog_list") + "?category=mlops")
+        self.assertEqual(r.status_code, 200)
+        body = r.content.decode("utf-8")
+        # canonical must point to the unfiltered /blog/, not include ?category=
+        canonical = re.search(r'rel="canonical" href="([^"]+)"', body)
+        self.assertIsNotNone(canonical, "canonical link tag missing")
+        self.assertNotIn("?category=", canonical.group(1))
+        self.assertTrue(canonical.group(1).endswith("/blog/"))
+
+    def test_blog_detail_seo(self):
+        r = self.client.get(reverse("blog_detail", kwargs={"slug": self.post.slug}))
+        self.assertEqual(r.status_code, 200)
+        self._assert_seo_present(r, expected_title_substring="Hello World")
+        body = r.content.decode("utf-8")
+        # BlogPosting + BreadcrumbList JSON-LD present on detail
+        self.assertIn('"@type": "BlogPosting"', body)
+        self.assertIn('"datePublished"', body)
+        self.assertIn('"dateModified"', body)
+        self.assertIn('"@type": "BreadcrumbList"', body)
+
+    def test_blog_detail_seo_date_modified_uses_updated_at(self):
+        """dateModified must be the post's updated_at, not published_at.
+
+        The view serialises ``updated_at.isoformat()`` directly (blog/views.py:150),
+        which for a TZ-aware datetime produces ``...+00:00``. Python 3.11+
+        ``datetime.fromisoformat()`` parses this losslessly, so a 2-second
+        tolerance is enough for any rounding from json.dumps.
+        """
+        import json
+        from datetime import datetime
+
+        r = self.client.get(reverse("blog_detail", kwargs={"slug": self.post.slug}))
+        body = r.content.decode("utf-8")
+        ldjson_blocks = re.findall(
+            r'<script[^>]+type="application/ld\+json"[^>]*>(.+?)</script>',
+            body,
+            re.DOTALL,
+        )
+        blogposting_blocks = [b for b in ldjson_blocks if "BlogPosting" in b]
+        self.assertEqual(
+            len(blogposting_blocks), 1, "expected exactly one BlogPosting block"
+        )
+        parsed = json.loads(blogposting_blocks[0])
+        modified = parsed["dateModified"]
+        self.assertTrue(modified, "dateModified must be non-empty")
+        self.assertIn("T", modified, "dateModified must be ISO 8601 (contains 'T')")
+        # The view uses Python isoformat directly — fromisoformat round-trips it.
+        modified_dt = datetime.fromisoformat(modified)
+        expected = self.post.updated_at
+        delta = abs((modified_dt - expected).total_seconds())
+        self.assertLess(
+            delta,
+            2,
+            f"dateModified {modified_dt} differs from updated_at {expected} by {delta}s",
+        )
+
+
+class RobotsTests(TestCase):
+    def test_robots_txt(self):
+        r = self.client.get("/robots.txt")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("text/plain", r["Content-Type"])
+        self.assertIn(b"User-agent: *", r.content)
+        self.assertIn(b"Disallow: /admin/", r.content)
+        self.assertIn(b"Sitemap:", r.content)
+        # Sitemap line should contain the SITE_URL
+        from django.conf import settings
+
+        self.assertIn(settings.SITE_URL.encode(), r.content)
+
+
+class SitemapTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.category = Category.objects.create(name="MLOps", slug="mlops")
+        cls.published = BlogPost.objects.create(
+            title="Published",
+            slug="published",
+            body="x",
+            category=cls.category,
+            is_published=True,
+        )
+        cls.draft = BlogPost.objects.create(
+            title="Draft",
+            slug="draft",
+            body="x",
+            category=cls.category,
+            is_published=False,
+        )
+
+    def test_sitemap_xml(self):
+        r = self.client.get("/sitemap.xml")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("application/xml", r["Content-Type"])
+        body = r.content.decode("utf-8")
+        # Well-formed XML
+        import xml.etree.ElementTree as ET
+
+        ET.fromstring(body)  # raises on malformed
+        # Required <loc> entries
+        from django.conf import settings
+
+        base = settings.SITE_URL.rstrip("/")
+        for expected in ["/", "/projects/", "/experiences/", "/blog/"]:
+            self.assertIn(f"<loc>{base}{expected}</loc>", body, f"missing {expected}")
+        # Published post included
+        self.assertIn(f"<loc>{base}/blog/published/</loc>", body)
+        # Draft excluded
+        self.assertNotIn("/blog/draft/", body)
+        # Categories excluded (per Phase 6 fix)
+        self.assertNotIn("?category=", body)
+        # /admin/ excluded
+        self.assertNotIn("/admin/", body)
+
+
+class ErrorPagesTests(TestCase):
+    """The branded 404 template (templates/404.html) must render on unknown URLs.
+
+    Django's test runner forces ``DEBUG=False`` regardless of the project's
+    settings.DEBUG value, so the framework's debug 404 page never appears here
+    and the handler falls through to ``templates/404.html`` (Phase 7 deliverable).
+    """
+
+    def test_404_uses_branded_template(self):
+        r = self.client.get("/this-page-does-not-exist/")
+        self.assertEqual(r.status_code, 404)
+        body = r.content.decode("utf-8")
+        self.assertIn("ERROR 404", body)
+        self.assertIn("Page not found", body)
+        self.assertIn('name="robots" content="noindex,nofollow"', body)

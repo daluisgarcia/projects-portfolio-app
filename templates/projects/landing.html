@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Data Science/Software Engineering Portfolio{% endblock %}
+{% block title %}Daniel Luis — Software Engineer & Data Scientist{% endblock %}
+
+{% block og_title %}Daniel Luis — Software Engineer & Data Scientist{% endblock %}
+
+{% block meta_description %}<meta name="description" content="Software engineer and data scientist — explore selected projects, professional experience, and engineering writing on backend systems, ML pipelines, and scalable architectures.">{% endblock %}
+
+{% block canonical_url %}{{ site_url }}{% url 'landing' %}{% endblock %}
+
+{% block og_url %}{{ site_url }}{% url 'landing' %}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/code-style.css' %}">
@@ -186,6 +194,66 @@
                 <p class="text-on-surface-variant font-body-lg">No featured projects yet. Check back soon.</p>
             </div>
             {% endif %}
+        </div>
+    </div>
+
+    <div class="pt-8 pl-4" id="latest-insights">
+        <h1 class="font-headline-md text-headline-md text-on-background">Latest <span class="text-secondary">Insights</span></h1>
+    </div>
+
+    <!-- Cell 3: Blog Code -->
+    <div class="flex group">
+        <div class="execution-count pt-4 hidden md:block">3</div>
+        <div class="flex-1 code-cell p-6 rounded-r-lg shadow-inner">
+            <div class="font-code-sm text-code-sm leading-relaxed">
+                <div><span class="syntax-keyword">import</span> blog_core <span class="syntax-keyword">as</span> bc</div>
+                <br>
+                <div>posts = bc.<span class="syntax-function">fetch_latest</span>(limit=<span class="syntax-string">"published"</span>)</div>
+                <div>posts.<span class="syntax-function">display_grid</span>(layout=<span class="syntax-string">"uniform"</span>)</div>
+            </div>
+        </div>
+    </div>
+    <!-- Cell 3 Output: Latest Insights -->
+    <div class="flex pt-4" id="blog">
+        <div class="output-count hidden md:block">3</div>
+        <div class="flex-1 output-cell pl-6">
+            {% if blog_posts %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                {% for post in blog_posts %}
+                <a href="{% url 'blog_detail' slug=post.slug %}"
+                    class="group block h-full rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container transition-transform duration-500 hover:-translate-y-2">
+                    <div class="aspect-[16/9] bg-surface-container-highest overflow-hidden">
+                        <img class="w-full h-full object-cover opacity-80 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
+                            src="{{ post.cover_image_url|default:'/static/img/og-default.png' }}"
+                            alt="{{ post.cover_image_alt|default:post.title }}">
+                    </div>
+                    <div class="p-6">
+                        {% if post.category %}
+                        <p class="font-label-caps text-label-caps text-tertiary mb-2 tracking-widest uppercase">{{ post.category.name }}</p>
+                        {% endif %}
+                        <h3 class="font-headline-sm text-headline-sm text-on-background mb-2">{{ post.title }}</h3>
+                        {% if post.published_at %}
+                        <p class="font-code-sm text-code-sm text-on-surface-variant mb-3">{{ post.published_at|date:"F j, Y" }}</p>
+                        {% endif %}
+                        {% if post.excerpt %}
+                        <p class="font-body-md text-on-surface-variant">{{ post.excerpt|truncatechars:120 }}</p>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <p class="text-on-surface-variant font-body-lg">No insights published yet.</p>
+            </div>
+            {% endif %}
+            <div class="mt-8 text-center">
+                <a class="inline-flex items-center gap-2 text-secondary font-label-caps text-label-caps border-b border-secondary/0 hover:border-secondary transition-all"
+                    href="{% url 'blog_list' %}">
+                    READ ALL INSIGHTS
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
         </div>
     </div>
 

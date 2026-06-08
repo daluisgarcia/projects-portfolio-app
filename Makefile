@@ -44,6 +44,10 @@ down:  ## stop the stack (keeps volumes; safe for dev)
 down-v:  ## stop the stack AND drop all volumes (resets postgres data)
 	$(DC) down -v
 
+.PHONY: stop
+stop:  ## stop the stack but keep containers and volumes (for quick restart with `make up-bg`)
+	$(DC) stop
+
 .PHONY: logs
 logs:  ## tail logs for all services (Ctrl-C to exit)
 	$(DC) logs -f

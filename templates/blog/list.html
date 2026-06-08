@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Blog | Data Science/Software Engineering Portfolio{% endblock %}
+{% block title %}{% if active_category %}{{ active_category.name }} — Blog — {{ site_name }}{% else %}Blog — {{ site_name }}{% endif %}{% endblock %}
+
+{% block og_title %}{% if active_category %}{{ active_category.name }} — Blog — {{ site_name }}{% else %}Blog — {{ site_name }}{% endif %}{% endblock %}
+
+{% block meta_description %}<meta name="description" content="{% if active_category %}{{ active_category.name }} — engineering writing and notes.{% else %}Engineering writing on data, systems, and software.{% endif %}">{% endblock %}
+
+{% block canonical_url %}{{ site_url }}{% url 'blog_list' %}{% endblock %}
+
+{% block og_url %}{{ site_url }}{% url 'blog_list' %}{% endblock %}
 
 {% block main_class %}pt-32 pb-section-gap max-w-container-max mx-auto px-margin-mobile md:px-gutter{% endblock %}
 

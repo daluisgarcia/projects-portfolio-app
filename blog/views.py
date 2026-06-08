@@ -1,5 +1,9 @@
+import json
+
+from django.conf import settings
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import Http404
+from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 
 from .models import BlogPost, Category
@@ -123,4 +127,50 @@ class BlogPostDetailView(TemplateView):
             post.related_posts.filter(is_published=True)[:3]
         )
         context["active_page"] = "blog"
+
+        # JSON-LD payloads are built in the view and rendered via {{ ... |safe }} in
+        # the template. We hand-roll the <script> wrapper (rather than using
+        # django.utils.html.json_script) so the type is application/ld+json (the
+        # JSON-LD spec MIME type); json_script hardcodes application/json. The
+        # payload itself is serialised with json.dumps which properly escapes
+        # post.title even if it contains ", <, >, &.
+        # Note: context processors (e.g. app.seo.site_seo) run at template render
+        # time, not in get_context_data, so we read settings directly here.
+        site_url = settings.SITE_URL
+        site_author = settings.SITE_AUTHOR
+        site_default_og_image = settings.SITE_DEFAULT_OG_IMAGE
+        canonical_url_for_post = f"{site_url}/blog/{post.slug}/"
+        context["canonical_url_for_post"] = canonical_url_for_post
+        blogposting_payload = {
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": post.title,
+            "description": post.excerpt or (post.body[:160] if post.body else ""),
+            "datePublished": post.published_at.isoformat() if post.published_at else None,
+            "dateModified": post.updated_at.isoformat(),
+            "image": [post.cover_image_url] if post.cover_image_url else [site_default_og_image],
+            "url": canonical_url_for_post,
+            "mainEntityOfPage": {"@type": "WebPage", "@id": canonical_url_for_post},
+            "author": {"@type": "Person", "name": site_author},
+            "publisher": {"@type": "Person", "name": site_author, "url": site_url},
+        }
+        context["blogposting_json_ld"] = mark_safe(
+            f'<script id="blogposting-jsonld" type="application/ld+json">'
+            f"{json.dumps(blogposting_payload)}"
+            f"</script>"
+        )
+        breadcrumb_payload = {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{site_url}/"},
+                {"@type": "ListItem", "position": 2, "name": "Blog", "item": f"{site_url}/blog/"},
+                {"@type": "ListItem", "position": 3, "name": post.title, "item": canonical_url_for_post},
+            ],
+        }
+        context["breadcrumb_json_ld"] = mark_safe(
+            f'<script id="breadcrumb-jsonld" type="application/ld+json">'
+            f"{json.dumps(breadcrumb_payload)}"
+            f"</script>"
+        )
         return context
