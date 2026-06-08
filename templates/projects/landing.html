@@ -138,9 +138,17 @@
                             <h3 class="font-headline-md text-headline-md text-on-background mb-2">{{ project.name }}
                             </h3>
                             <p class="font-body-md text-on-surface-variant max-w-md mb-4">{{ project.description }}</p>
+                            {% if project.project_link or project.github_link %}
                             <a class="inline-flex items-center gap-2 text-secondary font-label-caps text-label-caps border-b border-secondary/0 hover:border-secondary transition-all"
-                                href="{{ project.project_link|default:project.github_link|default:'#' }}">EXPLORE
-                                REPO</a>
+                                href="{{ project.project_link|default:project.github_link|default:'#' }}" target="_blank" rel="noopener noreferrer">
+                                EXPLORE REPO
+                            </a>
+                            {% else %}
+                            <p class="text-on-surface-variant inline-flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">lock</span>
+                                No link available.
+                            </p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -159,7 +167,7 @@
                                 {{ field.name }}
                             </span>
                             {% endfor %}
-                            //
+                            |
                             {% for tech in project.technologies.all %}
                             <span
                                 class="font-code-sm text-code-sm text-on-primary-container px-2 py-1 bg-surface-container-high rounded">

@@ -13,9 +13,11 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-COPY . /app/
+COPY pyproject.toml poetry.lock* /app/
 
 RUN pip install --no-cache-dir . gunicorn
+
+COPY . /app/
 
 RUN chmod +x /app/prepare-django-db.sh
 

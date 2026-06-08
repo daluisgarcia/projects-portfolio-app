@@ -4,6 +4,20 @@ A complete Django web application that powers the personal portfolio. It renders
 
 For design notes and architectural decisions, see [`DESIGN.md`](./DESIGN.md).
 
+## Quick start
+
+The whole project is driven by a single `Makefile`. Run `make help` to list all targets. The essentials:
+
+```bash
+make install   # one-time: install Python deps via uv
+make up-bg     # start the stack in the background (postgres + django app)
+make test      # run the full Django test suite
+make logs      # tail logs (Ctrl-C to exit)
+make down      # stop the stack (keeps data)
+```
+
+Visit http://localhost:8000 after `make up-bg`. Run `make help` any time to see the full target list.
+
 ## Features
 
 - **Landing page** — Hero, pinned projects, and latest blog highlights.
@@ -24,8 +38,17 @@ For design notes and architectural decisions, see [`DESIGN.md`](./DESIGN.md).
 - **Dependency management:** `uv` (PEP 621 `pyproject.toml`)
 - **WSGI server:** Gunicorn (production / Docker)
 - **Containerization:** Docker & Docker Compose
+- **Task runner:** `Makefile` — see `make help`
 
 ## Install dependencies
+
+The Makefile wraps `uv sync`:
+
+```bash
+make install
+```
+
+To do it by hand (without the Makefile), use `uv sync` directly:
 
 ```bash
 uv sync
@@ -33,9 +56,15 @@ uv sync
 
 ## Run the project
 
+The Makefile wraps `docker compose up`:
+
 ```bash
-docker-compose up --build
+make up-bg      # detached (recommended)
+# or
+make up         # foreground with live log streaming
 ```
+
+The Makefile uses `docker compose` v2 by default. To use the legacy v1 `docker-compose` binary instead, set `DC=docker-compose` (e.g. `DC=docker-compose make up-bg`).
 
 If you are developing, you can use the following `docker-compose.override.yaml` content to allow hot reloading and avoid having to rebuild the image every time you make a change:
 
@@ -69,6 +98,7 @@ services:
 | `docker-compose.yaml` / `docker-compose.override.yaml` | Compose services (Postgres + Django app) |
 | `prepare-django-db.sh` | Migrations + `collectstatic` + superuser bootstrap on container start |
 | `pyproject.toml` | PEP 621 project config and dependencies |
+| `Makefile` | Common dev/test task runner (`make help` to list all targets) |
 | `README.md` | This file |
 
 ## Database
@@ -80,16 +110,10 @@ The database is initialized automatically by `prepare-django-db.sh`, which:
 2. Collects static files (`collectstatic`)
 3. Creates a superuser from env vars if possible
 
-To load the initial experiences fixture:
-
-```bash
-docker-compose exec app python manage.py loaddata experiences.fixtures.initial_experiences
-```
-
 To open a database shell:
 
 ```bash
-docker-compose exec app python manage.py dbshell
+make dbshell
 ```
 
 ## Vector Embeddings
@@ -99,7 +123,7 @@ docker-compose exec app python manage.py dbshell
 - **Storage:** `VectorField(dimensions=384)` — sized for sentence-transformers `all-MiniLM-L6-v2` or compatible 384-dim embedders.
 - **Relation:** `ForeignKey(BlogPost, on_delete=CASCADE, related_name="embeddings")` — deleting a post cascades to its embeddings.
 - **Metadata:** `model_name` char field (default `"all-MiniLM-L6-v2"`) so multiple embedding models can coexist per post. `unique_together = (post, model_name)` allows swapping the embedding provider later without losing prior vectors.
-- **Backend requirement:** postgres only — the `vector` column type and the extension are not available on SQLite. Use `docker-compose exec app python manage.py test blog` to exercise the embedding model tests.
+- **Backend requirement:** postgres only — the `vector` column type and the extension are not available on SQLite. Run `make test-blog` against the docker stack to exercise the embedding model tests.
 - **Not populated automatically** — embeddings must be inserted via Django admin, shell, management command, or external pipeline.
 
 ## Environment Variables

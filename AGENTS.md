@@ -51,6 +51,7 @@ When performing these actions, ALWAYS invoke the corresponding skill FIRST:
 | `Dockerfile` | Image build for the Django app |
 | `prepare-django-db.sh` | Migrations + `collectstatic` + superuser bootstrap on container start |
 | `pyproject.toml` | PEP 621 project config and dependencies |
+| `Makefile` | Common dev/test task runner (`make help` to list all targets) |
 | `README.md` | Project documentation and setup instructions |
 
 
@@ -88,11 +89,11 @@ When performing these actions, ALWAYS invoke the corresponding skill FIRST:
 - **Backend requirement:** postgres only. The `BlogPostEmbeddingModelTests` test class is `@skipUnless(connection.vendor == "postgresql", ...)`-guarded and skips on SQLite. The `BlogPostEmbeddingAdminTests` class (admin-registration only) runs on any backend.
 - **Not populated automatically** — embeddings must be inserted via Django admin, shell, management command, or external pipeline.
 
-To run the postgres-only embedding tests:
+To run the postgres-only embedding tests (requires the stack to be up first):
 
 ```bash
-docker-compose up --build -d
-docker-compose exec app python manage.py test blog.tests.BlogPostEmbeddingModelTests -v 2
+make up-bg
+make test-embeddings
 ```
 
 When adding similarity-search views or HNSW/IVFFlat indexes on the `embedding` column, follow the existing `select_related` / `prefetch_related` conventions in the views. Defer adding indexes until row count justifies the build cost (rule of thumb: >1k rows).
@@ -104,11 +105,42 @@ When adding similarity-search views or HNSW/IVFFlat indexes on the `embedding` c
 
 ## Development Environment
 
+All common dev/test tasks are wrapped in the `Makefile`. Run `make help` to list all targets. Quick reference:
+
+| Command | What it does |
+|---|---|
+| `make install` | one-time: install Python deps via `uv sync` |
+| `make up-bg` | start the stack in the background |
+| `make up` | start the stack in the foreground (live log streaming) |
+| `make down` | stop the stack (keeps volumes; safe for dev) |
+| `make down-v` | stop the stack AND drop volumes (resets postgres data) |
+| `make build` | rebuild images |
+| `make logs` | tail logs (Ctrl-C to exit) |
+| `make test` | run the full Django test suite (requires `make up-bg` first) |
+| `make test-blog` | run the blog app tests |
+| `make test-embeddings` | run the postgres-only `BlogPostEmbeddingModelTests` (verbose) |
+| `make test-local` | run tests against local SQLite (no docker; pgvector tests skip) |
+| `make migrate` | apply pending migrations |
+| `make makemigrations` | generate new migrations after model changes |
+| `make fixture` | load the initial experiences fixture |
+| `make superuser` | create a Django superuser (interactive) |
+| `make shell` | open a Django shell inside the app container |
+| `make dbshell` | open a postgres shell |
+| `make add PKG=foo` | add a new Python dep via `uv add` |
+| `make clean` | stop stack, drop volumes, remove pyc/ruff cache |
+
+The Makefile defaults to `docker compose` v2. To use the legacy v1 `docker-compose` binary instead, set `DC=docker-compose` (e.g. `DC=docker-compose make up-bg`).
+
 ### Running the Application
-The project is designed to run via Docker Compose:
+Start the stack in the background:
 ```bash
-docker-compose up --build
+make up-bg
 ```
+Or in the foreground with live log streaming:
+```bash
+make up
+```
+Then visit http://localhost:8000.
 
 ### Database Setup
 The database is initialized automatically via `prepare-django-db.sh` which:
@@ -116,14 +148,9 @@ The database is initialized automatically via `prepare-django-db.sh` which:
 2. Collects static files (`collectstatic`)
 3. Creates a superuser from env vars if possible
 
-To load the initial experiences fixture:
-```bash
-docker-compose exec app python manage.py loaddata experiences.fixtures.initial_experiences
-```
-
 To access the database shell:
 ```bash
-docker-compose exec app python manage.py dbshell
+make dbshell
 ```
 
 ### Environment Variables
@@ -143,29 +170,44 @@ Key variables:
 When modifying models in `projects/models.py`, `experiences/models.py`, or `blog/models.py`:
 1. Create migration:
    ```bash
-   docker-compose exec app python manage.py makemigrations
+   make makemigrations
    ```
 2. Apply migration:
    ```bash
-   docker-compose exec app python manage.py migrate
+   make migrate
    ```
 
 Note: the `blog.0002_blogpostembedding` migration runs `VectorExtension()` to enable the `vector` extension on postgres. The extension is enabled automatically on the postgres container — no manual `CREATE EXTENSION` is needed.
 
 ### 2. Running Tests
-Run standard Django tests:
+Run the full Django test suite (requires `make up-bg` first):
 ```bash
-docker-compose exec app python manage.py test
+make test
+```
+
+To run just the blog app:
+```bash
+make test-blog
+```
+
+To run the postgres-only `BlogPostEmbeddingModelTests` (verbose):
+```bash
+make test-embeddings
+```
+
+To run tests against local SQLite (faster, no docker; pgvector tests skip):
+```bash
+make test-local
 ```
 
 ### 3. Adding Dependencies
 As we are using `uv` for dependency management, to add a new package:
 ```bash
-uv add <package-name>
+make add PKG=<package-name>
 ```
 Then rebuild the Docker image to include the new dependency:
 ```bash
-docker-compose up --build
+make build
 ```
 
 ### 4. Customizing Templates
